@@ -5,7 +5,7 @@ opp_data={}, some_process={},git_src='', ME=0,OPP=1,WIN=1,DRAW=0,LOSE=-1,NOSYNC=
 
 let room_id='room1';
 const BANK_DATA=[0,100,200,300,400,500,1000,2000,3000,4000,5000];
-const QUESTIONS=[['КРАСНЫЙ ВКУСНЫЙ ОВОЩ','ПОМИДОР'],['СПЕЛОЕ, НАЛИВНОЕ','ЯБЛОКО'],['ЕДЕНИЦА ИЗМЕРЕНИЯ РАССТОЯНИЯ НА БУКУ К','КИЛОМЕТР']];
+let QUESTIONS=null;
 
 fbs_once=async function(path){	
 	let info=await fbs.ref(path).once('value');
@@ -843,7 +843,7 @@ game={
 		const is_bank=data.put_bank&&data.uid===my_data.uid;
 		const q=this.cur_question+'/'+this.num_of_questions;
 		this.cur_question++;
-		host.add_msg('ВОПРОС '+q,QUESTIONS[data.q_id][0],is_bank)
+		host.add_msg('ВОПРОС '+q,QUESTIONS[data.q_id][1],is_bank)
 			
 		
 		//убираем все хайлайты кроме того кого спрашивают
@@ -2425,6 +2425,25 @@ async function check_blocked(){
 	
 }
 
+async function load_questions(){
+	
+	try {
+	  const response = await fetch('https://akukamil.github.io/chain/q.txt');
+	  if (!response.ok) throw new Error('Error fetching data');
+	  const text_data = await response.text();
+	  _q=JSON.parse(text_data);
+	  if (Array.isArray(_q)&&_q.length>100) {
+		  QUESTIONS=_q;
+		  console.log('Вопросы загружены!');
+	  }
+
+	} catch (error) {
+	  console.error('Error:', error.message);
+	}	
+	
+	
+}
+
 async function init_game_env(env) {
 			
 
@@ -2552,6 +2571,7 @@ async function init_game_env(env) {
 		
 	document.addEventListener("visibilitychange", vis_change);
 	window.addEventListener('keydown', function(event) { keyboard.keydown(event.key)});
+
 		
 	//загружаем остальные данные из файербейса
 	const other_data = await fbs_once('players/' + my_data.uid);
@@ -2587,6 +2607,9 @@ async function init_game_env(env) {
 	
 	//keep-alive сервис
 	setInterval(function()	{keep_alive()}, 40000);
+	
+	//загружаем слова
+	await load_questions();
 
 	//ждем одну секунду
 	await new Promise((resolve, reject) => {setTimeout(resolve, 1000);});
