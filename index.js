@@ -109,24 +109,24 @@ class player_card_class extends PIXI.Container {
 		this.uid=0;				
 				
 		this.avatar_hl=new PIXI.Sprite(gres.avatar_hl.texture);
-		this.avatar_hl.width=this.avatar_hl.height=90;
+		this.avatar_hl.width=this.avatar_hl.height=100;
 		this.avatar_hl.x=-10;
 		this.avatar_hl.y=-10;		
 		this.avatar_hl.visible=false;
 		
 		this.avatar_hl_vote=new PIXI.Sprite(gres.avatar_hl_red.texture);
-		this.avatar_hl_vote.width=this.avatar_hl_vote.height=90;
+		this.avatar_hl_vote.width=this.avatar_hl_vote.height=100;
 		this.avatar_hl_vote.x=-10;
 		this.avatar_hl_vote.y=-10;		
 		this.avatar_hl_vote.visible=false;
 				
 		this.avatar_mask=new PIXI.Sprite(gres.avatar_mask.texture);
-		this.avatar_mask.width=this.avatar_mask.height=70;
+		this.avatar_mask.width=this.avatar_mask.height=80;
 		this.avatar_mask.x=0;
 		this.avatar_mask.y=0;
 		
-		this.avatar=new PIXI.Sprite(gres.girl_photo.texture);
-		this.avatar.width=this.avatar.height=50;
+		this.avatar=new PIXI.Sprite();
+		this.avatar.width=this.avatar.height=60;
 		this.avatar.x=10;
 		this.avatar.y=10;
 		this.avatar.interactive=this.avatar.buttonMode=true;
@@ -136,37 +136,37 @@ class player_card_class extends PIXI.Container {
 		this.avatar.mask=this.avatar_mask;
 		
 		this.avatar_frame=new PIXI.Sprite(gres.avatar_frame.texture);
-		this.avatar_frame.width=this.avatar_frame.height=70;
+		this.avatar_frame.width=this.avatar_frame.height=80;
 		
 		this.cross=new PIXI.Sprite(gres.cross_img.texture);
-		this.cross.x=this.cross.y=35;
-		this.cross.width=this.cross.height=70;
+		this.cross.x=this.cross.y=40;
+		this.cross.width=this.cross.height=80;
 		this.cross.anchor.set(0.5,0.5);
 		this.cross.visible=false;
 		
 		
 		this.vote_bcg=new PIXI.Sprite(gres.vote_bcg.texture);
-		this.vote_bcg.width=this.vote_bcg.height=50;
-		this.vote_bcg.x=30;
+		this.vote_bcg.width=this.vote_bcg.height=60;
+		this.vote_bcg.x=40;
 		this.vote_bcg.y=-10;
 		this.vote_bcg.visible=false;
 		
 		this.t_vote_res=new PIXI.BitmapText('0', {fontName: 'mfont', fontSize :22});
 		this.t_vote_res.anchor.set(0.5,0.5);
-		this.t_vote_res.x=55;
+		this.t_vote_res.x=65;
 		this.t_vote_res.y=15;
 		this.t_vote_res.tint=0x111111;
 		this.t_vote_res.visible=false;
 						
 		this.name=new PIXI.BitmapText('Ирина Т.', {fontName: 'mfont', fontSize :22});
 		this.name.anchor.set(0.5,0.5);
-		this.name.x=35;
-		this.name.y=70;
+		this.name.x=40;
+		this.name.y=80;
 		this.name.tint=0xffffff;
 						
 		this.t_rating=new PIXI.BitmapText('9564', {fontName: 'mfont', fontSize :24});
-		this.t_rating.x=35;
-		this.t_rating.y=90;
+		this.t_rating.x=40;
+		this.t_rating.y=100;
 		this.t_rating.tint=0xffffff;
 		this.t_rating.anchor.set(0.5,0.5);
 		
@@ -630,16 +630,14 @@ sound = {
 	
 	play : function(snd_res) {
 				
-		if (game_res.resources[snd_res].sound===undefined)
+		if (!gres[snd_res]?.sound)
 			return;
 		
 		if (this.on === 0)
-			return;
+			return;		
+
 		
-		if (game_res.resources[snd_res]===undefined)
-			return;
-		
-		game_res.resources[snd_res].sound.play();	
+		gres[snd_res].sound.play();	
 		
 	},
 	
@@ -648,7 +646,7 @@ sound = {
 		if (this.on === 0)
 			return;
 		
-		if (game_res.resources[snd_res]===undefined)
+		if (gres[snd_res]===undefined)
 			return;
 		
 		
@@ -661,7 +659,35 @@ sound = {
 		
 		PIXI.sound.stopAll();
 	}
+		
+}
+
+music={
 	
+	on:1,
+	
+	activate(){
+		
+		if (!this.on) return;
+	
+		if (!gres.music.sound.isPlaying){
+			gres.music.sound.play();
+			gres.music.sound.loop=true;
+		}
+	},
+	
+	switch(){
+		
+		if (this.on){
+			this.on=0;
+			gres.music.sound.stop();			
+		} else{
+			this.on=1;
+			gres.music.sound.play();	
+		}
+		
+		objects.music_switch_button.texture=gres[['no_music_icon','music_switch_button'][this.on]].texture;
+	}
 	
 }
 
@@ -669,12 +695,12 @@ host={
 	
 	bank_resolver:0,
 	
-	async add_msg(header_text, msg, bank){
-				
-				
-		
+	async add_msg(header_text, msg, bank,snd){
+						
 		//если уже есть какой-то промис то закрываем его
 		if (this.bank_resolver) this.bank_resolver('forced');
+		
+		sound.play(snd||'host_message');
 		
 		if (bank){	
 			objects.t_host_msg.text='';
@@ -717,7 +743,13 @@ game={
 	async activate(){
 		
 		//текущее состояние стола
-		await game.analyse_table();			
+		await game.analyse_table();		
+
+		//показываем аватарки
+		objects.avatars_cont.visible=true;		
+		
+		anim2.add(objects.control_buttons,{x:[800,objects.control_buttons.sx]}, true, 0.24,'linear');	
+		
 							
 		//keep-alive для стола		
 		fbs.ref(room_id+'/pending/'+my_data.uid).set({rating:my_data.rating,tm:firebase.database.ServerValue.TIMESTAMP});
@@ -759,6 +791,9 @@ game={
 			if(data.type==='fans')
 				game.super_game_ans(data);	
 			
+			if(data.type==='r_fin')
+				game.round_finish_event(data);	
+			
 			if(data.type==='voting')
 				game.start_voting(data);	
 			
@@ -769,8 +804,10 @@ game={
 				game.game_ans(data);	
 			
 			if(data.type==='super_game')
-				game.super_game_start_event(data);				
-
+				game.super_game_start_event(data);		
+			
+			if(data.type==='super_game2')
+				game.super_game2_start_event(data);	
 		});
 				
 	},
@@ -787,8 +824,7 @@ game={
 
 		//скрываем данные от суперигры
 		objects.ans_icons_cont.visible=false;
-		
-		objects.avatars_cont.visible=true;		
+						
 		objects.timer_bar.visible=false;
 				
 		//отключаем проверку количества игроков
@@ -860,7 +896,7 @@ game={
 		
 		this.start_timer(15);
 		
-		//если это вопрос не мне
+		//если это вопрос не мне или я не в игре
 		if(data.uid!==my_data.uid||!this.iam_active) return		
 		
 		let ans_data = await keyboard.open();
@@ -905,6 +941,10 @@ game={
 		console.log(data);	
 	},
 	
+	round_finish_event(data){	
+		host.add_msg('ИНФО','РАУНД ЗАКОНЧЕН, ЗАРАБОТАНО ДЕНЕГ: '+objects.t_total_bank.text);	
+	},
+	
 	take_bank(won_bank){
 		
 		let total_bank=+objects.t_total_bank.text;
@@ -937,7 +977,7 @@ game={
 		
 		this.voting_on=1;
 
-		host.add_msg('ИНФО','НАЧИНАЕМ ГОЛОСОВАНИЕ! НАЖМИТЕ НА АВАТАР ИГРОКА КОТОРОГО ВЫ СЧИТАЕТЕ САМЫМ СЛАБЫМ');
+		host.add_msg('ИНФО','НАЧИНАЕМ ГОЛОСОВАНИЕ! НАЖМИТЕ НА АВАТАР ИГРОКА КОТОРОГО ВЫ СЧИТАЕТЕ САМЫМ СЛАБЫМ',0,'voting');
 		this.start_timer(20);
 		
 		//чистим карточки
@@ -951,7 +991,7 @@ game={
 		if(card.active===0) return;
 		if(!this.voting_on) return;
 				
-		host.add_msg('ИНФО','ВЫБОР СДЕЛАН! ЖДЕМ ОСТАЛЬНЫХ ИГРОКОВ...');
+		host.add_msg('ИНФО','ВЫБОР СДЕЛАН! ЖДЕМ ОСТАЛЬНЫХ ИГРОКОВ...',0,'vote_done');
 		
 		card.avatar_hl_vote.visible=true;		
 		fbs.ref(room_id+'/votes/'+my_data.uid).set(card.uid);
@@ -982,10 +1022,17 @@ game={
 		const weakest_card=this.uid_to_pcards[data.weakest_link];		
 		weakest_card.active=0;
 		anim2.add(weakest_card.cross,{scale_xy:[0,0.666]}, true, 0.8,'easeOutBack');
-		if(weakest_card.uid===my_data.uid) this.iam_active=0;
+		if(weakest_card.uid===my_data.uid){
+			this.iam_active=0;
+			host.add_msg('ИНФО','ВЫ САМОЕ СЛАБОЕ ЗВЕНО! ПРОЩАЙТЕ!',0,'lose');
+		}else{
+			
+			host.add_msg('ИНФО',weakest_card.name.text+' САМОЕ СЛАБОЕ ЗВЕНО!');			
+		}
 		
 		//показываем сообщение
-		host.add_msg('ИНФО',weakest_card.name.text+' САМОЕ СЛАБОЕ ЗВЕНО!');
+		
+		
 		
 	},
 			
@@ -1001,11 +1048,11 @@ game={
 	
 	super_game_start_event(){
 		
-		this.num_of_questions=5;
+		this.num_of_questions=10;
 		this.cur_question=1;
 		
 		//показываем сообщение
-		host.add_msg('ИНФО','НАЧИНАЕМ СУПЕР ИГРУ!');
+		host.add_msg('ИНФО','НАЧИНАЕМ СУПЕР ИГРУ!',0,'super_game');
 				
 		//убираем банк
 		if (objects.bank_cont.visible)
@@ -1033,6 +1080,16 @@ game={
 		
 		anim2.add(sg_cards[0],{x:[sg_cards[0].x,40]}, true, 0.5,'easeOutBack');		
 		anim2.add(sg_cards[1],{x:[sg_cards[1].x,390]}, true, 0.5,'easeOutBack');
+		
+	},
+	
+	super_game2_start_event(){
+		
+		this.num_of_questions=10;
+		this.cur_question=1;
+		
+		//показываем сообщение
+		host.add_msg('ИНФО','ПОКА НИЧЬЯ! ЕЩЕ 5 ВОПРОСОВ ПОКА КТО-НИБУДЬ НЕ ОШИБЕТСЯ ИЛИ НИЧЬЯ');
 		
 	},
 	
@@ -1068,7 +1125,7 @@ game={
 				
 				if (data.winner===my_data.uid){		
 					this.take_bank(total_bank);
-					host.add_msg('ИНФО','ПОЗДРАВЛЯЮ С ПОБЕДОЙ! ВАШ ВЫИГРЫШ: '+total_bank);
+					host.add_msg('ИНФО','ПОЗДРАВЛЯЮ С ПОБЕДОЙ! ВАШ ВЫИГРЫШ: '+total_bank,0,'applause');
 				}else{
 					const winner_name=this.uid_to_pcards[data.winner].name.text;
 					host.add_msg('ИНФО','ИГРА ЗАВЕРШЕНА! ПОБЕДИЛ '+winner_name);
@@ -1091,14 +1148,17 @@ game={
 		const card=this.uid_to_pcards[data.uid];
 		
 		objects.t_player_ans.text=data.ans;
-		if (data.cor)			
-			objects.player_ans_bcg.tint=0xffffff;			
-		else			
-			objects.player_ans_bcg.tint=0xff0000;			
-		
+		if (data.cor){
+			objects.player_ans_bcg.texture=gres.correct_bcg.texture;			
+			sound.play('correct_ans')
+		}else{
+			objects.player_ans_bcg.texture=gres.wrong_bcg.texture;					
+			sound.play('wrong_ans')
+		}		
+			
 		//показываем ответ
 		objects.player_ans_cont.x=card.x+35;		
-		anim2.add(objects.player_ans_cont,{alpha:[0,1]}, false, 4,'easeBridge');
+		anim2.add(objects.player_ans_cont,{alpha:[0,1]}, false, 4,'easeBridge',false);
 	},
 	
 	show_status_window(t){
@@ -1134,6 +1194,32 @@ game={
 		objects.t_table_status1.text=['Игроков онлайн: ','Players online: '][LANG]+num_of_players;
 	},
 		
+	sound_switch_down(on){
+					
+		if (on)
+			sound.on=on
+		else
+			sound.on=1-sound.on;
+		
+		objects.pref_sound_button.texture=gres[['no_sound_icon','sound_switch_button'][sound.on]].texture;
+		
+		sound.play('click');
+	},
+	
+	music_switch_down(){
+		
+		music.switch();
+		
+	},
+		
+	exit_down(){
+		
+		if(anim2.any_on())return;
+		this.close();
+		main_menu.activate();
+		
+	},
+	
 	async analyse_table(){	
 
 		const info=await fbs_once(room_id+'/info');
@@ -1303,24 +1389,19 @@ game={
 	
 	put_bank(data){
 		objects.t_total_bank.text=data.bank_total;
+		sound.play('money');
 		this.set_bank_level(0);
-	},
-	
-	exit_button_down(){
-		
-		if(anim2.any_on())return;
-		this.close();
-		main_menu.activate();
-		
 	},
 		
 	bank_opt_down(e){
+		
+		sound.play('click');
 				
 		//координаты нажатия в плостоки спрайта клавиатуры
 		let mx = e.data.global.x/app.stage.scale.x - objects.host_bank_ask.x;
 		
 		//если кликнули на банк
-		if (mx<190)
+		if (mx<0)
 			fbs.ref(room_id+'/players_actions').set({uid:my_data.uid,type:'put_bank',tm:Date.now()})
 		
 		//завершаем
@@ -1328,16 +1409,18 @@ game={
 		
 	},
 
-	stop(res){
-		
-		
-		
-		
-	},
-
 	close(){
 		
 		game.first_event=1;		
+		this.iam_active=0;
+		this.close_status_window();
+		objects.control_buttons.visible=false;	
+		objects.host_msg.visible=false;
+		objects.ans_icons_cont.visible=false;
+		objects.bank_cont.visible=false;
+		objects.avatars_cont.visible=false;
+		objects.keyboard_cont.visible=false;
+		
 		
 		clearInterval(this.pending_timer);
 		fbs.ref(room_id+'/server_events').off();
@@ -1605,7 +1688,7 @@ keyboard={
 	
 	resolver : 0,
 	//x,y,x2,y2
-	keys_data:[[497.61,9.38,547.27,46.88,'<<'],[13.73,9.38,46.04,46.88,'Й'],[53.44,9.38,85.75,46.88,'Ц'],[93.15,9.38,125.46,46.88,'У'],[132.85,9.38,165.16,46.88,'К'],[172.56,9.38,204.87,46.88,'Е'],[212.27,9.38,244.58,46.88,'Н'],[251.97,9.38,284.28,46.88,'Г'],[291.68,9.38,323.99,46.88,'Ш'],[331.39,9.38,363.7,46.88,'Щ'],[371.09,9.38,403.4,46.88,'З'],[410.8,9.38,443.11,46.88,'Х'],[450.51,9.38,482.82,46.88,'Ъ'],[13.73,53.44,49.65,90.94,'Ф'],[57.05,53.44,92.97,90.94,'Ы'],[100.37,53.44,136.29,90.94,'В'],[143.68,53.44,179.6,90.94,'А'],[187,53.44,222.92,90.94,'П'],[230.32,53.44,266.24,90.94,'Р'],[273.63,53.44,309.55,90.94,'О'],[316.95,53.44,352.87,90.94,'Л'],[360.27,53.44,396.19,90.94,'Д'],[403.58,53.44,439.5,90.94,'Ж'],[446.9,53.44,482.82,90.94,'Э'],[70.79,97.5,103.66,135,'Я'],[111.05,97.5,143.92,135,'Ч'],[151.31,97.5,184.18,135,'С'],[191.58,97.5,224.45,135,'М'],[231.84,97.5,264.71,135,'И'],[272.11,97.5,304.98,135,'Т'],[312.37,97.5,345.24,135,'Ь'],[352.64,97.5,385.51,135,'Б'],[392.9,97.5,425.77,135,'Ю'],[500.78,98.44,550.44,135.94,'OK']],
+	keys_data:[[501,8.38,561,45.88,'<<'],[13.73,8.38,46.04,45.88,'Й'],[53.44,8.38,85.75,45.88,'Ц'],[93.15,8.38,125.46,45.88,'У'],[132.85,8.38,165.16,45.88,'К'],[172.56,8.38,204.87,45.88,'Е'],[212.27,8.38,244.58,45.88,'Н'],[251.97,8.38,284.28,45.88,'Г'],[291.68,8.38,323.99,45.88,'Ш'],[331.39,8.38,363.7,45.88,'Щ'],[371.09,8.38,403.4,45.88,'З'],[410.8,8.38,443.11,45.88,'Х'],[450.51,8.38,482.82,45.88,'Ъ'],[13.73,53.97,49.65,91.47,'Ф'],[57.05,53.97,92.97,91.47,'Ы'],[100.37,53.97,136.29,91.47,'В'],[143.68,53.97,179.6,91.47,'А'],[187,53.97,222.92,91.47,'П'],[230.32,53.97,266.24,91.47,'Р'],[273.63,53.97,309.55,91.47,'О'],[316.95,53.97,352.87,91.47,'Л'],[360.27,53.97,396.19,91.47,'Д'],[403.58,53.97,439.5,91.47,'Ж'],[446.9,53.97,482.82,91.47,'Э'],[70.79,98.75,103.66,136.25,'Я'],[111.05,98.75,143.92,136.25,'Ч'],[151.31,98.75,184.18,136.25,'С'],[191.58,98.75,224.45,136.25,'М'],[231.84,98.75,264.71,136.25,'И'],[272.11,98.75,304.98,136.25,'Т'],[312.37,98.75,345.24,136.25,'Ь'],[352.64,98.75,385.51,136.25,'Б'],[392.9,98.75,425.77,136.25,'Ю'],[501,98.75,560.66,136.25,'OK'],[501,53.97,561,91.47,'ПАС']],
 	
 	open(){		
 		
@@ -1628,6 +1711,8 @@ keyboard={
 	keydown(key){				
 		
 		//*******это нажатие с клавиатуры
+		if(!objects.keyboard.visible) return;
+		
 		key = key.toUpperCase();
 		sound.play('keypress');
 				
@@ -1709,7 +1794,14 @@ keyboard={
 			this.resolver(objects.keyboard_text.text);			
 			objects.keyboard_text.text=''
 			return;
-		}		
+		}	
+
+		if(key==='ПАС'){			
+					
+			this.resolver('ПАС');			
+			objects.keyboard_text.text=''
+			return;
+		}			
 
 		//добавляем значение к слову
 		objects.keyboard_text.text+=key;
@@ -1781,7 +1873,7 @@ tables_menu={
 			return;
 		}*/
 		
-		room_id=room;
+		room_id='room1';
 		game.activate();
 		this.close();
 		
@@ -1807,9 +1899,10 @@ main_menu= {
 		anim2.add(objects.game_title,{y:[-300,objects.game_title.sy]}, true, 1,'easeInOutCubic');
 		objects.desktop.texture = gres.desktop.texture;
 		anim2.add(objects.desktop,{alpha:[0,1]}, true, 0.6,'linear');
+		
+		music.activate();
 	},
 	
-
 	async close() {
 
 		objects.mb_cont.visible=false;
@@ -1849,22 +1942,16 @@ main_menu= {
 
 	async rules_button_down() {
 
-		if (anim2.any_on()===true) {
-			sound.play('locked');
-			return
-		};
-
-		sound.play('click');
-	
-		await this.close();
-		rules.activate();
-
-
+		if(!objects.mb_cont.ready)
+			return;
+		anim2.add(objects.rules_pic,{y:[-450, objects.rules_pic.sy]}, true, 0.2,'easeOutBack');
 	},
 
 	rules_ok_down() {
 
-		anim2.add(objects.rules_cont,{y:[objects.rules_cont.sy, -450]}, false, 0.5,'easeInBack');
+		if(!objects.rules_pic.ready)
+			return;
+		anim2.add(objects.rules_pic,{y:[objects.rules_pic.y, 450]}, false, 0.2,'easeInBack');
 
 	},
 
@@ -2000,9 +2087,7 @@ rules = {
 		this.active = 1;
 		anim2.add(objects.desktop,{alpha:[0,0.5]}, true, 0.6,'linear');	
 		anim2.add(objects.rules_back_button,{x:[800, objects.rules_back_button.sx]}, true, 0.5,'easeOutCubic');
-		anim2.add(objects.rules_text,{alpha:[0, 1]}, true, 1,'linear');
 				
-		objects.rules_text.text = ['Добро пожаловать в карточную игру Покер (онлайн дуэль)!\n\nВ игре участвуют до 6 игроков. Цель игры - составить лучшую пятикарточную покерную комбинацию из своих и общих карт. В игре несколько раундов, в течении которых игроки делают ставки. После каждого раунда открывается одна или три (на префлопе) карты. Когда все карты открыты, объявляется победитель - тот, у кого сложилась более сильная комбинация карт, и он забирает банк (pot). Также можно выиграть банк если соперники откажутся продолжать партию (скинут карты). Выиграть можно также вводя соперников в заблуждение величиной ставок (блеф) и тем самым заставляя их скидывать карты.\n\nУдачной игры!','Welcome to the Poker card game (online)!\n\n The game involves up to 6 players. The goal of the game is to make the best five-card poker combination of your own and community cards. There are several rounds in the game, during which players place bets. After each round, one or three (preflop) cards are opened. When all the cards are open, the winner is announced - the one who has a stronger combination of cards, and he takes the pot. You can also win the pot if the opponent refuses to continue the game (throws off the cards). You can also win by misleading your opponent with the amount of bets (bluff) and thereby forcing him to fold his cards.\n\nHave a good game!'][LANG];
 	},
 	
 	back_button_down : async function() {
@@ -2289,34 +2374,32 @@ async function load_resources() {
 
 	document.getElementById("m_progress").style.display = 'flex';
 
-	let git_src="https://akukamil.github.io/poker/"
-	git_src=""
+	let git_src="https://akukamil.github.io/chain/"
+	//git_src=""
 
 	//подпапка с ресурсами
-	let lang_pack = ['RUS','ENG'][LANG];
-	
+	let lang_pack = ['RUS','ENG'][LANG];	
 
-	game_res=new PIXI.Loader();
-	
+	game_res=new PIXI.Loader();	
 	
 	game_res.add("m2_font", git_src+"fonts/Bahnschrift/font.fnt");
 
-	game_res.add('check',git_src+'sounds/check.mp3');
-	game_res.add('raise',git_src+'sounds/raise.mp3');
+	game_res.add('applause',git_src+'sounds/applause.mp3');
+	game_res.add('super_game',git_src+'sounds/super_game.mp3');
 	game_res.add('lose',git_src+'sounds/lose.mp3');
 	game_res.add('win',git_src+'sounds/win.mp3');
 	game_res.add('click',git_src+'sounds/click.mp3');
-	game_res.add('confirm_dialog',git_src+'sounds/confirm_dialog.mp3');
+	game_res.add('host_message',git_src+'sounds/host_message.mp3');
 	game_res.add('close',git_src+'sounds/close.mp3');
 	game_res.add('locked',git_src+'sounds/locked.mp3');
 	game_res.add('clock',git_src+'sounds/clock.mp3');
-	game_res.add('card',git_src+'sounds/card.mp3');
-	game_res.add('card_open',git_src+'sounds/card_open.mp3');
-	game_res.add('dialog',git_src+'sounds/dialog.mp3');
+	game_res.add('correct_ans',git_src+'sounds/correct_ans.mp3');
+	game_res.add('wrong_ans',git_src+'sounds/wrong_ans.mp3');
+	game_res.add('vote_done',git_src+'sounds/vote_done.mp3');
 	game_res.add('keypress',git_src+'sounds/keypress.mp3');
-	game_res.add('inst_msg',git_src+'sounds/inst_msg.mp3');
-	game_res.add('fold',git_src+'sounds/fold.mp3');
+	game_res.add('voting',git_src+'sounds/voting.mp3');
 	game_res.add('money',git_src+'sounds/money.mp3');
+	game_res.add('music',git_src+'sounds/music.mp3');
 	
     //добавляем из листа загрузки
     for (var i = 0; i < load_list.length; i++) {
