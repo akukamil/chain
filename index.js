@@ -1895,21 +1895,22 @@ main_menu= {
 
 	async activate() {
 
-		anim2.add(objects.mb_cont,{x:[800,objects.mb_cont.sx]}, true, 1,'easeInOutCubic');
-		anim2.add(objects.game_title,{y:[-300,objects.game_title.sy]}, true, 1,'easeInOutCubic');
-		objects.desktop.texture = gres.desktop.texture;
-		anim2.add(objects.desktop,{alpha:[0,1]}, true, 0.6,'linear');
+		some_process.main_menu=main_menu.process;
+		anim2.add(objects.mb_cont,{y:[450,objects.mb_cont.sy]}, true, 1,'linear');
+		anim2.add(objects.main_title,{y:[-300,objects.main_title.sy]}, true, 1,'easeInOutCubic');
+		anim2.add(objects.girl,{x:[-400,objects.girl.sx]}, true, 2,'easeInOutCubic');
+		anim2.add(objects.online_icon,{scale_x:[0,0.6666]}, true, 2,'easeOutBack');
 		
+		anim2.add(objects.desktop,{alpha:[0,1]}, true, 0.6,'linear');
 		music.activate();
 	},
 	
 	async close() {
-
-		objects.mb_cont.visible=false;
-		some_process.main_menu_process = function(){};
-		anim2.add(objects.mb_cont,{x:[objects.mb_cont.x,800]}, true, 1,'easeInOutCubic');
-		anim2.add(objects.game_title,{y:[objects.game_title.y,-300]}, true, 1,'linear');
-		//await anim2.add(objects.desktop,{alpha:[1,0]}, false, 0.6,'linear');	
+		some_process.main_menu=function(){};
+		anim2.add(objects.mb_cont,{y:[objects.mb_cont.y,450]}, false, 0.5,'linear');
+		anim2.add(objects.main_title,{y:[objects.main_title.y,-300]}, false, 0.3,'linear');
+		anim2.add(objects.girl,{x:[objects.girl.x,-400]}, false, 0.4,'linear');
+		anim2.add(objects.online_icon,{alpha:[1,0]}, false, 0.6,'linear');				
 	},
 
 	async pb_down() {
@@ -1945,6 +1946,12 @@ main_menu= {
 		if(!objects.mb_cont.ready)
 			return;
 		anim2.add(objects.rules_pic,{y:[-450, objects.rules_pic.sy]}, true, 0.2,'easeOutBack');
+	},
+
+	process(){
+		
+		objects.online_icon.alpha=Math.abs(Math.sin(game_tick*2));
+		
 	},
 
 	rules_ok_down() {
