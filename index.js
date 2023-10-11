@@ -4,7 +4,7 @@ hidden_state_start=0,fbs=null, pending_player='', opponent={}, my_data={opp_id :
 opp_data={}, some_process={},git_src='', ME=0,OPP=1,WIN=1,DRAW=0,LOSE=-1,NOSYNC=2,turn=0,BET=0,BIG_BLIND=2;
 
 let room_id='room1';
-const BANK_DATA=[0,100,200,300,400,500,1000,2000,3000,4000,5000];
+const BANK_DATA=[0,50,100,300,400,500,1000,2000,3000,4000,5000];
 let QUESTIONS=null;
 
 fbs_once=async function(path){	
@@ -1352,7 +1352,12 @@ game={
 			objects.table_status_circle.rotation+=0.2;				
 			objects.table_status_pic.scale_y=Math.sin(game_tick)*0.666;
 		}
-		
+	
+		//периодически покачиваем голову ведущей
+		let x=((game_tick*3) % 16)-8;
+		const x2=x*x;		
+		objects.host_img.angle=10*(1-x2)*Math.exp(-0.5*x2);		
+	
 		
 	},
 	
@@ -1955,8 +1960,7 @@ main_menu= {
 		if (objects.girl.ready){
 			let x=((game_tick*5) % 16)-8;
 			const x2=x*x;		
-			objects.girl.x=objects.girl.sx+30*(1-x2)*Math.exp(-0.5*x2);		
-			
+			objects.girl.x=objects.girl.sx+30*(1-x2)*Math.exp(-0.5*x2);			
 		}
 
 		
