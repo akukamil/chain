@@ -151,10 +151,10 @@ class player_card_class extends PIXI.Container {
 		this.vote_bcg.y=-10;
 		this.vote_bcg.visible=false;
 		
-		this.t_vote_res=new PIXI.BitmapText('0', {fontName: 'mfont', fontSize :22});
+		this.t_vote_res=new PIXI.BitmapText('0', {fontName: 'mfont', fontSize :25});
 		this.t_vote_res.anchor.set(0.5,0.5);
-		this.t_vote_res.x=65;
-		this.t_vote_res.y=15;
+		this.t_vote_res.x=70;
+		this.t_vote_res.y=20;
 		this.t_vote_res.tint=0x111111;
 		this.t_vote_res.visible=false;
 						
@@ -1952,6 +1952,16 @@ main_menu= {
 		
 		objects.online_icon.alpha=Math.abs(Math.sin(game_tick*2));
 		
+		if (objects.girl.ready){
+			let x=((game_tick*5) % 16)-8;
+			const x2=x*x;		
+			objects.girl.x=objects.girl.sx+30*(1-x2)*Math.exp(-0.5*x2);		
+			
+		}
+
+		
+		objects.main_title.angle=3*Math.sin(game_tick);
+		
 	},
 
 	rules_ok_down() {
@@ -2382,7 +2392,7 @@ async function load_resources() {
 	document.getElementById("m_progress").style.display = 'flex';
 
 	let git_src="https://akukamil.github.io/chain/"
-	//git_src=""
+	git_src=""
 
 	//подпапка с ресурсами
 	let lang_pack = ['RUS','ENG'][LANG];	
