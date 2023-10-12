@@ -942,7 +942,8 @@ game={
 	},
 	
 	round_finish_event(data){	
-		host.add_msg('ИНФО','РАУНД ЗАКОНЧЕН, ЗАРАБОТАНО ДЕНЕГ: '+objects.t_total_bank.text);	
+		host.add_msg('ИНФО','РАУНД ЗАКОНЧЕН, ЗАРАБОТАНО ДЕНЕГ: '+objects.t_total_bank.text+'\nПРОДОЛЖИМ ПОСЛЕ РЕКЛАМЫ...');	
+		ad.show();
 	},
 	
 	take_bank(won_bank){
@@ -1559,9 +1560,9 @@ ad = {
 		
 	show : function() {
 		
-		if ((Date.now() - this.prv_show) < 100000 )
+		/*if ((Date.now() - this.prv_show) < 100000 )
 			return;
-		this.prv_show = Date.now();
+		this.prv_show = Date.now();*/
 		
 		if (game_platform==='YANDEX') {			
 			//показываем рекламу
