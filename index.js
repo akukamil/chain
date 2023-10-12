@@ -894,7 +894,7 @@ game={
 		}
 		
 		
-		this.start_timer(15);
+		this.start_timer(20);
 		
 		//если это вопрос не мне или я не в игре
 		if(data.uid!==my_data.uid||!this.iam_active) return		
