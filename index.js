@@ -2034,6 +2034,7 @@ lb = {
 
 		sound.play('click');
 		await this.close();
+		ad.show();
 		main_menu.activate();
 
 	},
