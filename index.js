@@ -4,7 +4,7 @@ hidden_state_start=0,fbs=null, pending_player='', opponent={}, my_data={opp_id :
 opp_data={}, some_process={},git_src='', ME=0,OPP=1,WIN=1,DRAW=0,LOSE=-1,NOSYNC=2,turn=0,BET=0,BIG_BLIND=2;
 
 let room_id='room1';
-const BANK_DATA=[0,50,100,300,400,500,1000,2000,3000,4000,5000];
+const BANK_DATA=[0,5,10,20,50,100,500,1000,2000,3000,5000];
 let QUESTIONS=null;
 
 fbs_once=async function(path){	
@@ -749,8 +749,7 @@ game={
 		objects.avatars_cont.visible=true;		
 		
 		anim2.add(objects.control_buttons,{x:[800,objects.control_buttons.sx]}, true, 0.24,'linear');	
-		
-							
+									
 		//keep-alive для стола		
 		fbs.ref(room_id+'/pending/'+my_data.uid).set({rating:my_data.rating,tm:firebase.database.ServerValue.TIMESTAMP});
 		this.pending_timer=setInterval(function(){
@@ -942,7 +941,10 @@ game={
 	},
 	
 	round_finish_event(data){	
-		host.add_msg('ИНФО','РАУНД ЗАКОНЧЕН, ЗАРАБОТАНО ДЕНЕГ: '+objects.t_total_bank.text+'\nПРОДОЛЖИМ ПОСЛЕ РЕКЛАМЫ...');	
+		if (data.single)
+			host.add_msg('ИНФО','РАУНД ЗАКОНЧЕН. ИГРАЙТЕ С ДРУГИМИ ИГРОКАМИ С ГОЛОСОВАНИЕМ И СУПЕР ИГРОЙ');	
+		else
+			host.add_msg('ИНФО','РАУНД ЗАКОНЧЕН, ЗАРАБОТАНО ДЕНЕГ: '+objects.t_total_bank.text+'\nПРОДОЛЖИМ ПОСЛЕ РЕКЛАМЫ...');	
 		ad.show();
 	},
 	
