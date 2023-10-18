@@ -839,7 +839,11 @@ game={
 		objects.t_total_bank.text=0;			
 	
 		anim2.add(objects.host_msg,{scale_x:[0,1]}, true, 0.24,'linear');	
-		host.add_msg('ИНФО','НАЧИНАЕМ ИГРУ!')
+		
+		if (this.players.length===1)
+			host.add_msg('ИНФО','НАЧИНАЕМ ОДИНОЧНУЮ ИГРУ, ПОКА НЕТ ДРУГИХ ИГРОКОВ!')
+		else
+			host.add_msg('ИНФО','НАЧИНАЕМ ИГРУ!')			
 		
 		//подчищаем карточки игроков
 		this.clean_cards();
@@ -872,10 +876,9 @@ game={
 		
 	},
 
-	async game_question_event(data){
+	async game_question_event(data){						
 						
-						
-		const is_bank=data.put_bank&&data.uid===my_data.uid;
+		const is_bank=this.players.length>1&&data.put_bank&&data.uid===my_data.uid;
 		const q=this.cur_question+'/'+this.num_of_questions;
 		this.cur_question++;
 		host.add_msg('ВОПРОС '+q,QUESTIONS[data.q_id][1],is_bank)
@@ -891,8 +894,7 @@ game={
 				card.alpha=0.5;	
 			}	
 		}
-		
-		
+				
 		this.start_timer(20);
 		
 		//если это вопрос не мне или я не в игре
@@ -942,7 +944,7 @@ game={
 	
 	round_finish_event(data){	
 		if (data.single)
-			host.add_msg('ИНФО','РАУНД ЗАКОНЧЕН. ИГРАЙТЕ С ДРУГИМИ ИГРОКАМИ С ГОЛОСОВАНИЕМ И СУПЕР ИГРОЙ');	
+			host.add_msg('ИНФО','РАУНД ЗАКОНЧЕН! ИГРАЙТЕ С ДРУГИМИ ИГРОКАМИ С ГОЛОСОВАНИЕМ И СУПЕР ИГРОЙ');	
 		else
 			host.add_msg('ИНФО','РАУНД ЗАКОНЧЕН, ЗАРАБОТАНО ДЕНЕГ: '+objects.t_total_bank.text+'\nПРОДОЛЖИМ ПОСЛЕ РЕКЛАМЫ...');	
 		ad.show();
