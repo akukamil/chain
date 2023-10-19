@@ -453,7 +453,7 @@ chat={
 	
 	send(t){
 
-		if(t.length<3) return;
+		if(t.length<2) return;
 		const hash=this.make_hash();
 		const index=this.get_oldest_index();
 		fbs.ref('chat/'+index).set({uid:my_data.uid,name:my_data.name,msg:t,tm:firebase.database.ServerValue.TIMESTAMP,index, hash});
