@@ -62,33 +62,44 @@ class lb_player_card_class extends PIXI.Container{
 class chat_record_class extends PIXI.Container {
 	
 	constructor() {
+		super();
 		
-		super();	
-		this.resolver=0;
-		this.text=new PIXI.BitmapText('***', {fontName: 'mfont',fontSize:25,lineSpacing:37}); 
-		this.text.tint=0x55bbdd;
-		this.text.maxWidth=290;
-		
-		this.name_text=new PIXI.BitmapText('***', {fontName: 'mfont',fontSize: 25}); 
-		this.name_text.tint=0xbbff00;
-		
-		this.visible=false;
-		this.addChild(this.text,this.name_text)
-		
-	}
-	
-	async set(name,text,color){
-		
-		sound.play('inst_msg');
-		name=name.substr(0,7);
-		this.text.text=name+': '+text;
-		this.name_text.text=name+':';
-		this.name_text.tint=color||0xFFFFFF;	
-		this.visible=true;
-
-
+		this.tm=0;
+		this.hash=0;
+		this.index=0;
+		this.uid='';
+			
+		this.name = new PIXI.BitmapText('Имя Фамил', {fontName: 'mfont',fontSize: 27});
+		this.name.x=0;
+		this.name.y=0;	
+		this.name.tint=0xffff00;
+					
+		this.msg = new PIXI.BitmapText('Имя Фамил', {fontName: 'mfont',fontSize: 27,align: 'left'}); 
+		this.msg.x=0;
+		this.msg.y=0;
+		this.msg.maxWidth=600;
+		this.msg.tint = 0xffffff;
+				
+		this.visible = false;
+		this.addChild(this.msg,this.name);
 		
 	}	
+	
+	async set(msg_data) {									
+
+		this.uid=msg_data.uid;
+		this.tm = msg_data.tm;			
+		this.hash = msg_data.hash;
+		this.index = msg_data.index;
+		
+		//уменьшаем имя		
+		const name=msg_data.name.substring(0, 7)
+		this.name.text=name+': ';
+		this.msg.text=this.name.text+msg_data.msg;		
+		this.visible = true;		
+	
+		
+	}		
 	
 	hide(){
 		
@@ -340,18 +351,112 @@ chat={
 	
 	bottom:0,
 	cont_total_shift:0,
+	activated:0,
+		
+	activate() {		
+
+		if(!this.activated){
+			this.init();
+			this.activated=1;
+		}
+		anim2.add(objects.chat_cont,{alpha:[0, 0.6]}, true, 0.1,'linear');
+
+	},
 	
-	add_message(name,text){
+	close() {
 		
-		const oldest=this.get_old_message();
-		oldest.y=this.bottom;
-		oldest.set(name,text,0xffffff);
-		oldest.visible=true;
-		const message_height=oldest.text.textHeight-6;
-		this.bottom+=message_height;
-		this.cont_total_shift-=message_height;
-		anim2.add(objects.chat_cont,{y:[objects.chat_cont.y, objects.chat_cont.sy+this.cont_total_shift]}, true, 0.15,'linear');
+		anim2.add(objects.chat_cont,{alpha:[0.6, 0]}, false, 0.1,'linear');
+
+	},
+	
+	init(){
 		
+		
+		this.last_record_end = 0;
+		objects.chat_cont.x=10;	
+		objects.chat_cont.y=440;	
+		objects.chat_cont.visible=true;
+		
+		for(let rec of objects.chat_records) {
+			rec.visible = false;			
+			rec.msg_id = -1;	
+			rec.tm=0;
+		}		
+		
+		//загружаем чат
+		fbs.ref('chat').orderByChild('tm').limitToLast(20).once('value', snapshot => {chat.chat_load(snapshot.val());});		
+		
+	},	
+	
+	async chat_load(data) {
+		
+		if (data === null) return;
+		
+		//превращаем в массив
+		data = Object.keys(data).map((key) => data[key]);
+		
+		//сортируем сообщения от старых к новым
+		data.sort(function(a, b) {	return a.tm - b.tm;});
+			
+		//покаываем несколько последних сообщений
+		for (let c of data)
+			await this.chat_updated(c,true);	
+		
+		//подписываемся на новые сообщения
+		fbs.ref('chat').on('child_changed', snapshot => {chat.chat_updated(snapshot.val());});
+	},	
+				
+	async chat_updated(data, first_load) {		
+	
+		//console.log('receive message',data)
+		if(data===undefined) return;
+		
+		//если это сообщение уже есть в чате
+		if (objects.chat_records.find(obj => { return obj.hash === data.hash;}) !== undefined) return;
+		
+		
+		//выбираем номер сообщения
+		const new_rec=objects.chat_records[data.index||0]
+		await new_rec.set(data);
+		new_rec.y=this.last_record_end;
+		
+		const inter_line_space=22;
+		
+		this.last_record_end+=inter_line_space;		
+		
+		//смещаем на одно сообщение (если чат не видим то без твина)
+		if (objects.chat_cont.visible)
+			await anim2.add(objects.chat_cont,{y:[objects.chat_cont.y,objects.chat_cont.y-inter_line_space]},true, 0.05,'linear');		
+		else
+			objects.chat_cont.y-=inter_line_space;
+		
+	},
+			
+	make_hash() {
+	  let hash = '';
+	  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+	  for (let i = 0; i < 6; i++) {
+		hash += characters.charAt(Math.floor(Math.random() * characters.length));
+	  }
+	  return hash;
+	},
+	
+	get_oldest_index () {
+		
+		let oldest = {tm:9671801786406 ,visible:true};		
+		for(let rec of objects.chat_records)
+			if (rec.tm < oldest.tm)
+				oldest = rec;	
+		return oldest.index;		
+		
+	},
+	
+	send(t){
+
+		if(t.length<3) return;
+		const hash=this.make_hash();
+		const index=this.get_oldest_index();
+		fbs.ref('chat/'+index).set({uid:my_data.uid,name:my_data.name,msg:t,tm:firebase.database.ServerValue.TIMESTAMP,index, hash});
 		
 	},
 	
@@ -364,52 +469,7 @@ chat={
 			return oldest.y < msg.y ? oldest : msg;
 		});		
 	}
-	
-	
-	
-	
-}
-
-confirm_dialog = {
-	
-	p_resolve : 0,
 		
-	show: function(msg) {
-								
-		if (objects.confirm_cont.visible === true) {
-			sound.play('locked')
-			return;			
-		}		
-		
-		sound.play("confirm_dialog");
-				
-		objects.confirm_msg.text=msg;
-		
-		anim2.add(objects.confirm_cont,{y:[450,objects.confirm_cont.sy]}, true, 0.6,'easeOutBack');		
-				
-		return new Promise(function(resolve, reject){					
-			confirm_dialog.p_resolve = resolve;	  		  
-		});
-	},
-	
-	button_down : function(res) {
-		
-		if (objects.confirm_cont.ready===false)
-			return;
-		
-		sound.play('click')
-
-		this.close();
-		this.p_resolve(res);	
-		
-	},
-	
-	close : function() {
-		
-		anim2.add(objects.confirm_cont,{y:[objects.confirm_cont.sy,450]}, false, 0.4,'easeInBack');		
-		
-	}
-
 }
 
 anim2 = {
@@ -723,7 +783,6 @@ host={
 		
 	}
 	
-	
 }
 
 game={
@@ -748,6 +807,10 @@ game={
 		//показываем аватарки
 		objects.avatars_cont.visible=true;		
 		
+		//показываем кнопки но без чата
+		objects.exit_button.pointerdown=function(){game.exit_down()};
+		objects.chat_button.visible=false;
+		objects.control_buttons.y=50;
 		anim2.add(objects.control_buttons,{x:[800,objects.control_buttons.sx]}, true, 0.24,'linear');	
 									
 		//keep-alive для стола		
@@ -761,7 +824,7 @@ game={
 		some_process.timer_bar=this.process.bind(this);			
 			
 		fbs.ref(room_id+'/pending/'+my_data.uid).onDisconnect().remove();
-		
+				
 		//подписываемся на серверные сообщения
 		fbs.ref(room_id+'/server_events').on('value',function(s){
 			
@@ -841,7 +904,7 @@ game={
 		anim2.add(objects.host_msg,{scale_x:[0,1]}, true, 0.24,'linear');	
 		
 		if (this.players.length===1)
-			host.add_msg('ИНФО','НАЧИНАЕМ ОДИНОЧНУЮ ИГРУ, ПОКА НЕТ ДРУГИХ ИГРОКОВ!')
+			host.add_msg('ИНФО','ПОКА НЕТ ДРУГИХ ИГРОКОВ, ПРОВЕРИМ ВАШИ ЗНАНИЯ, ВАС ЖДУТ 3 ВОПРОСА!')
 		else
 			host.add_msg('ИНФО','НАЧИНАЕМ ИГРУ!')			
 		
@@ -861,7 +924,10 @@ game={
 		this.num_of_questions=data.q_cnt;
 		this.cur_question=1;
 		
-		host.add_msg('ИНФО','НАЧИНАЕМ НОВЫЙ РАУНД!')
+		if (this.players.length===1)
+			host.add_msg('ИНФО','НАЧИНАЕМ...')
+		else
+			host.add_msg('ИНФО','НАЧИНАЕМ НОВЫЙ РАУНД!')
 				
 		//показываем контейнер с банком
 		anim2.add(objects.bank_cont,{x:[-100,0]}, true, 1,'easeOutBack');	
@@ -882,8 +948,7 @@ game={
 		const q=this.cur_question+'/'+this.num_of_questions;
 		this.cur_question++;
 		host.add_msg('ВОПРОС '+q,QUESTIONS[data.q_id][1],is_bank)
-			
-		
+					
 		//убираем все хайлайты кроме того кого спрашивают
 		for (const [uid, card] of Object.entries(this.uid_to_pcards)){
 			if (uid===data.uid){
@@ -944,7 +1009,7 @@ game={
 	
 	round_finish_event(data){	
 		if (data.single)
-			host.add_msg('ИНФО','РАУНД ЗАКОНЧЕН! ИГРАЙТЕ С ДРУГИМИ ИГРОКАМИ С ГОЛОСОВАНИЕМ И СУПЕР ИГРОЙ');	
+			host.add_msg('ИНФО','НЕПЛОХО! ИГРАЙТЕ С ДРУГИМИ ИГРОКАМИ С ГОЛОСОВАНИЕМ И СУПЕР ИГРОЙ');	
 		else
 			host.add_msg('ИНФО','РАУНД ЗАКОНЧЕН, ЗАРАБОТАНО ДЕНЕГ: '+objects.t_total_bank.text+'\nПРОДОЛЖИМ ПОСЛЕ РЕКЛАМЫ...');	
 		ad.show();
@@ -1403,20 +1468,25 @@ game={
 		this.set_bank_level(0);
 	},
 		
-	bank_opt_down(e){
-		
-		sound.play('click');
-				
-		//координаты нажатия в плостоки спрайта клавиатуры
-		let mx = e.data.global.x/app.stage.scale.x - objects.host_bank_ask.x;
+	bank_opt_res(do_bank){
 		
 		//если кликнули на банк
-		if (mx<0)
+		if (do_bank)
 			fbs.ref(room_id+'/players_actions').set({uid:my_data.uid,type:'put_bank',tm:Date.now()})
 		
 		//завершаем
-		host.bank_resolver('ok');
+		host.bank_resolver('ok');		
+	},
 		
+	bank_opt_down(e){
+		
+		sound.play('click');
+		
+		//координаты нажатия в плостоки спрайта клавиатуры
+		let mx = e.data.global.x/app.stage.scale.x - objects.host_bank_ask.x;
+		
+		this.bank_opt_res(mx<0)
+	
 	},
 
 	close(){
@@ -1709,11 +1779,11 @@ keyboard={
 			keyboard.resolver=resolve;			
 		})
 		
-		
 	},
 		
 	close(){
 		
+		if(this.resolver) this.resolver();
 		anim2.add(objects.keyboard_cont,{y:[objects.keyboard_cont.y,450]}, false, 0.5,'linear');
 		
 	},
@@ -1721,10 +1791,23 @@ keyboard={
 	keydown(key){				
 		
 		//*******это нажатие с клавиатуры
-		if(!objects.keyboard.visible) return;
+		if(!objects.keyboard_cont.visible) return;
 		
-		key = key.toUpperCase();
 		sound.play('keypress');
+		key = key.toUpperCase();	
+		
+		if (objects.host_bank_ask.visible){
+			
+			if(key==='ENTER')
+				game.bank_opt_res(1);
+			
+			if(key==='ESCAPE')
+				game.bank_opt_res(0);
+			
+			return;		
+		}
+		
+			
 				
 		if(key==='BACKSPACE') key ='<<';
 		if(key==='ENTER') key ='OK';
@@ -1746,11 +1829,10 @@ keyboard={
 		for (let k of this.keys_data)	
 			if (mx > k[0] - margin && mx <k[2] + margin  && my > k[1] - margin && my < k[3] + margin)
 				return k;
-		return null;
-		
+		return null;		
 	},
 		
-	pointerdown(e, inp_key){
+	pointerdown(e){
 		
 		//if (!game.on) return;
 		
@@ -1820,16 +1902,154 @@ keyboard={
 		
 }
 
+chat_keyboard={
+			
+	keys_data : [[40,166.05,70,205.12,'1'],[80,166.05,110,205.12,'2'],[120,166.05,150,205.12,'3'],[160,166.05,190,205.12,'4'],[200,166.05,230,205.12,'5'],[240,166.05,270,205.12,'6'],[280,166.05,310,205.12,'7'],[320,166.05,350,205.12,'8'],[360,166.05,390,205.12,'9'],[400,166.05,430,205.12,'0'],[481,166.05,531,205.12,'<'],[60,214.88,90,253.95,'Й'],[100,214.88,130,253.95,'Ц'],[140,214.88,170,253.95,'У'],[180,214.88,210,253.95,'К'],[220,214.88,250,253.95,'Е'],[260,214.88,290,253.95,'Н'],[300,214.88,330,253.95,'Г'],[340,214.88,370,253.95,'Ш'],[380,214.88,410,253.95,'Щ'],[420,214.88,450,253.95,'З'],[460,214.88,490,253.95,'Х'],[500,214.88,530,253.95,'Ъ'],[80,263.72,110,302.79,'Ф'],[120,263.72,150,302.79,'Ы'],[160,263.72,190,302.79,'В'],[200,263.72,230,302.79,'А'],[240,263.72,270,302.79,'П'],[280,263.72,310,302.79,'Р'],[320,263.72,350,302.79,'О'],[360,263.72,390,302.79,'Л'],[400,263.72,430,302.79,'Д'],[440,263.72,470,302.79,'Ж'],[480,263.72,510,302.79,'Э'],[60,312.56,90,351.63,'!'],[100,312.56,130,351.63,'Я'],[140,312.56,170,351.63,'Ч'],[180,312.56,210,351.63,'С'],[220,312.56,250,351.63,'М'],[260,312.56,290,351.63,'И'],[300,312.56,330,351.63,'Т'],[340,312.56,370,351.63,'Ь'],[380,312.56,410,351.63,'Б'],[420,312.56,450,351.63,'Ю'],[501,312.56,531,351.63,')'],[441,166.05,471,205.12,'?'],[20,361.4,170,400.47,'ЗАКРЫТЬ'],[180,361.4,410,400.47,' '],[420,361.4,560,400.47,'ОТПРАВИТЬ'],[521,263.72,551,302.79,','],[461,312.56,491,351.63,'('],[20,263.72,70,302.79,'EN']],
+	MAX_SYMBOLS : 60,
+	
+	open() {			
+	
+		//если какой-то ресолвер открыт
+		if(this.resolver) this.resolver();
+		
+		objects.chat_keyboard_text.text ='';
+		objects.chat_keyboard_control.text = `0/${this.MAX_SYMBOLS}`
+				
+		anim2.add(objects.chat_keyboard_cont,{y:[-400, objects.chat_keyboard_cont.sy]}, true, 0.4,'easeOutBack');	
+		
+		return new Promise(function(resolve, reject){					
+			chat_keyboard.resolver = resolve;	  		  
+		});		
+	},	
+	
+	close () {		
+		
+		anim2.add(objects.chat_keyboard_cont,{y:[objects.chat_keyboard_cont.y,450]}, false, 0.4,'easeInBack');		
+		
+	},
+		
+	get_key_from_touch(e){
+		
+		//координаты нажатия в плостоки спрайта клавиатуры
+		let mx = e.data.global.x/app.stage.scale.x - objects.chat_keyboard_cont.x-10;
+		let my = e.data.global.y/app.stage.scale.y - objects.chat_keyboard_cont.y-10;
+				
+		//ищем попадание нажатия на кнопку
+		let margin = 5;
+		for (let k of this.keys_data)	
+			if (mx > k[0] - margin && mx <k[2] + margin  && my > k[1] - margin && my < k[3] + margin)
+				return k;
+		return null;		
+	},
+	
+	keydown (key) {		
+		
+		//*******это нажатие с клавиатуры
+		if(!objects.chat_keyboard_cont.visible) return;	
+		
+		key = key.toUpperCase();
+		
+		if(key==='BACKSPACE') key ='<';
+		if(key==='ENTER') key ='ОТПРАВИТЬ';
+		if(key==='ESCAPE') key ='ЗАКРЫТЬ';
+			
+		var key2 = this.keys_data.find(k => {return k[4] === key})			
+				
+		this.process_key(key2)		
+		
+	},	
+	
+	pointerdown (e) {
+		
+		//if (!game.on) return;
+				
+		//получаем значение на которое нажали
+		const key=this.get_key_from_touch(e);
+		
+		//дальнейшая обработка нажатой команды
+		this.process_key(key);	
+	},	
+	
+	highlight_key(key_data){
+		
+		const [x,y,x2,y2,key]=key_data
+		
+		//подсвечиваем клавишу
+		objects.chat_keyboard_hl.width=x2-x;
+		objects.chat_keyboard_hl.height=y2-y;
+		
+		objects.chat_keyboard_hl.x = x+objects.chat_keyboard.x;
+		objects.chat_keyboard_hl.y = y+objects.chat_keyboard.y;	
+		
+		anim2.add(objects.chat_keyboard_hl,{alpha:[1, 0]}, false, 0.5,'linear');
+		
+	},	
+	
+	close(){
+		
+		anim2.add(objects.chat_keyboard_cont,{y:[objects.chat_keyboard_cont.y,450]}, false, 0.4,'easeInBack');	
+
+	},
+		
+	process_key(key_data){
+
+		if(!key_data) return;	
+
+		let key=key_data[4];	
+
+		//звук нажатой клавиши
+		sound.play('keypress');				
+		
+		if (key==='ОТПРАВИТЬ'){
+			chat.send(objects.chat_keyboard_text.text);				
+			this.close();
+			key ='';		
+		}
+
+		if (key==='ЗАКРЫТЬ'){
+			this.close();
+			key ='';		
+		}
+		
+		if (key==='<'){
+			objects.chat_keyboard_text.text=objects.chat_keyboard_text.text.slice(0, -1);
+			key ='';		
+		}
+		
+		if (objects.chat_keyboard_text.text.length>=this.MAX_SYMBOLS) return;
+		
+		//подсвечиваем...
+		this.highlight_key(key_data);			
+
+		//добавляем значение к слову
+		if (key.length===1) objects.chat_keyboard_text.text+=key;
+		
+		objects.chat_keyboard_control.text = `${objects.chat_keyboard_text.text.length}/${this.MAX_SYMBOLS}`		
+		
+	}
+		
+}
+
 tables_menu={
 	
-	payments:null,
+	chat_activated:0,
 	
 	activate(){
-		
-		
-		anim2.add(objects.table1_data_cont,{x:[-50,objects.table1_data_cont.sx]}, true, 0.25,'linear');
-		anim2.add(objects.table2_data_cont,{x:[850,objects.table2_data_cont.sx]}, true, 0.25,'linear');
-		
+				
+				
+		//это чат
+		chat.activate();
+				
+		anim2.add(objects.table1_data_cont,{y:[-150,objects.table1_data_cont.sy]}, true, 0.25,'linear');
+		anim2.add(objects.table2_data_cont,{y:[-150,objects.table2_data_cont.sy]}, true, 0.25,'linear');
+		anim2.add(objects.table3_data_cont,{y:[-150,objects.table3_data_cont.sy]}, true, 0.25,'linear');
+
+
+		objects.exit_button.pointerdown=function(){tables_menu.exit_down()};
+		objects.control_buttons.y=190;
+		objects.chat_button.visible=true;
+		objects.control_buttons.visible=true;
+
 		fbs.ref('room1/pending').on('value',function(data){			
 			tables_menu.table_data_updated(objects.t_table1_players_num,data.val())
 		})
@@ -1837,6 +2057,20 @@ tables_menu={
 		fbs.ref('room2/pending').on('value',function(data){			
 			tables_menu.table_data_updated(objects.t_table2_players_num,data.val())
 		})
+		
+		fbs.ref('room3/pending').on('value',function(data){			
+			tables_menu.table_data_updated(objects.t_table3_players_num,data.val())
+		})
+	
+	
+	},
+	
+	exit_down(){
+		
+		if(anim2.any_on())return;
+		this.close();
+		main_menu.activate();
+		
 		
 	},
 	
@@ -1860,13 +2094,10 @@ tables_menu={
 		
 	},
 	
-	buy_chips_down(){
+	chat_button_down(){
 		
-		this.payments.purchase({ id: 'chips1000' }).then(purchase => {
-			objects.table_menu_info.text=['Вы купили 1000 фишек!','you bought 1000 chips!'][LANG];
-		}).catch(err => {
-			objects.table_menu_info.text=['Ошибка при покупке!','Error!'][LANG];
-		})
+		
+		chat_keyboard.open();
 		
 	},
 	
@@ -1891,12 +2122,16 @@ tables_menu={
 	
 	close(){
 		
+		objects.control_buttons.visible=false;
+		chat.close();
+		
 		fbs.ref('table1/pending').off();
 		fbs.ref('table2/pending').off();	
+		fbs.ref('table3/pending').off();		
 		
-		anim2.add(objects.table1_data_cont,{x:[objects.table1_data_cont.x,-50]}, false, 0.25,'linear');
-		anim2.add(objects.table2_data_cont,{x:[objects.table2_data_cont.x,850]}, false, 0.25,'linear');
-		
+		anim2.add(objects.table1_data_cont,{y:[objects.table1_data_cont.y,-150]}, false, 0.25,'linear');
+		anim2.add(objects.table2_data_cont,{y:[objects.table2_data_cont.y,-150]}, false, 0.25,'linear');
+		anim2.add(objects.table3_data_cont,{y:[objects.table2_data_cont.y,-150]}, false, 0.25,'linear');
 	}
 	
 }
@@ -1983,7 +2218,7 @@ main_menu= {
 
 }
 
-lb = {
+lb={
 	
 	active : 0,
 	cards_pos: [[370,10],[380,70],[390,130],[380,190],[360,250],[330,310],[290,370]],
@@ -2105,7 +2340,7 @@ lb = {
 
 }
 
-rules = {
+rules={
 	
 	active : 0,
 	
@@ -2140,11 +2375,10 @@ rules = {
 		
 		
 	}	
-	
-	
+		
 }
 
-auth2 = {
+auth2={
 		
 	load_script : function(src) {
 	  return new Promise((resolve, reject) => {
@@ -2680,7 +2914,7 @@ async function init_game_env(env) {
 	objects.id_avatar.texture = loader.resources.my_avatar.texture;
 		
 	document.addEventListener("visibilitychange", vis_change);
-	window.addEventListener('keydown', function(event) { keyboard.keydown(event.key)});
+	window.addEventListener('keydown', function(event) { keyboard.keydown(event.key); chat_keyboard.keydown(event.key)});
 
 		
 	//загружаем остальные данные из файербейса
