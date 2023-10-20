@@ -798,6 +798,8 @@ game={
 	voting_on:0,
 	num_of_questions:0,
 	cur_question:0,
+	first_letter_bonus:0,
+	num_of_letters_bonus:0,
 		
 	async activate(){
 		
@@ -948,6 +950,8 @@ game={
 		const q=this.cur_question+'/'+this.num_of_questions;
 		this.cur_question++;
 		host.add_msg('ВОПРОС '+q,QUESTIONS[data.q_id][1],is_bank)
+		
+		
 					
 		//убираем все хайлайты кроме того кого спрашивают
 		for (const [uid, card] of Object.entries(this.uid_to_pcards)){
@@ -965,10 +969,30 @@ game={
 		//если это вопрос не мне или я не в игре
 		if(data.uid!==my_data.uid||!this.iam_active) return		
 		
+		
+		//подсказка
+		this.show_hint(QUESTIONS[data.q_id][0]);
+		
+		
 		let ans_data = await keyboard.open();
 		keyboard.close();
 		fbs.ref(room_id+'/players_actions').set({uid:my_data.uid,type:'ans',ans:ans_data,tm:Date.now()})
 		
+	},
+	
+	show_hint(correct_ans){
+		
+		const first_letter=correct_ans[0];
+		const num_of_letters=correct_ans.length;
+		let hint_text='';	
+
+		if (this.num_of_letters_bonus)
+			hint_text+='Букв - '+num_of_letters;
+		if (this.first_letter_bonus)
+			hint_text+='   Первая - '+first_letter;
+			
+		objects.t_hint.text=hint_text;
+		anim2.add(objects.t_hint,{alpha:[0,0.75]}, false, 9,'easeBridge');			
 	},
 		
 	game_ans(data){
@@ -2033,22 +2057,28 @@ chat_keyboard={
 tables_menu={
 	
 	chat_activated:0,
+	hinst_timer:-1,
+	sec_to_hint0:30,
+	sec_to_hint1:15,
 	
-	activate(){
-				
+	activate(){				
 				
 		//это чат
 		chat.activate();
 				
 		anim2.add(objects.table1_data_cont,{y:[-150,objects.table1_data_cont.sy]}, true, 0.25,'linear');
-		anim2.add(objects.table2_data_cont,{y:[-150,objects.table2_data_cont.sy]}, true, 0.25,'linear');
-		anim2.add(objects.table3_data_cont,{y:[-150,objects.table3_data_cont.sy]}, true, 0.25,'linear');
+		anim2.add(objects.table2_data_cont,{y:[-150,objects.table2_data_cont.sy],alpha:[0,0.5]}, true, 0.25,'linear');
+		anim2.add(objects.table3_data_cont,{y:[-150,objects.table3_data_cont.sy],alpha:[0,0.5]}, true, 0.25,'linear');
 
+		anim2.add(objects.hints_cont,{x:[800,objects.hints_cont.sx]}, true, 0.25,'linear');
 
 		objects.exit_button.pointerdown=function(){tables_menu.exit_down()};
 		objects.control_buttons.y=190;
 		objects.chat_button.visible=true;
-		objects.control_buttons.visible=true;
+		objects.control_buttons.visible=true;		
+		
+		if (this.hinst_timer===-1)
+			this.hinst_timer=setInterval(function(){tables_menu.process_hints()},1000);
 
 		fbs.ref('room1/pending').on('value',function(data){			
 			tables_menu.table_data_updated(objects.t_table1_players_num,data.val())
@@ -2069,7 +2099,46 @@ tables_menu={
 		
 		if(anim2.any_on())return;
 		this.close();
-		main_menu.activate();
+		main_menu.activate();		
+		
+	},
+	
+	sec_to_format(sec){
+		
+		let minutes = Math.floor(sec / 60);
+		let remainingSeconds = sec % 60;
+		return minutes+'м '+remainingSeconds+'с';		
+		
+	},
+	
+	process_hints(){
+		
+		console.log('process_hints',this.sec_to_hint0,this.sec_to_hint1)
+		if (this.sec_to_hint0>0){
+			this.sec_to_hint0--;		
+			objects.t_time_hint0.text=this.sec_to_format(this.sec_to_hint0);				
+			
+			if (this.sec_to_hint0===0){				
+				objects.t_time_hint0.visible=false;
+				objects.hint0_pic.alpha=1;		
+				game.first_letter_bonus=1;
+				sound.play('hint_on');
+				clearInterval(this.hinst_timer);
+			}
+		}
+
+		
+		if (this.sec_to_hint1>0){
+			this.sec_to_hint1--;		
+			objects.t_time_hint1.text=this.sec_to_format(this.sec_to_hint1);				
+			
+			if (this.sec_to_hint1===0){				
+				objects.t_time_hint1.visible=false;
+				objects.hint1_pic.alpha=1;	
+				game.num_of_letters_bonus=1;
+				sound.play('hint_on');
+			}
+		}
 		
 		
 	},
@@ -2108,13 +2177,17 @@ tables_menu={
 			return
 		};
 		
-		/*if(table==='table2'){
-			anim2.add(objects.table2_data_cont,{x:[objects.table2_data_cont.sx,objects.table2_data_cont.sx+5]}, true, 0.25,'shake');
+		if(room==='room2'){
 			sound.play('locked');
 			return;
-		}*/
+		}
 		
-		room_id='room1';
+		if(room==='room3'){
+			sound.play('locked');
+			return;
+		}
+		
+		room_id=room;
 		game.activate();
 		this.close();
 		
@@ -2127,7 +2200,9 @@ tables_menu={
 		
 		fbs.ref('table1/pending').off();
 		fbs.ref('table2/pending').off();	
-		fbs.ref('table3/pending').off();		
+		fbs.ref('table3/pending').off();	
+
+		anim2.add(objects.hints_cont,{x:[objects.hints_cont.x,800]}, false, 0.25,'linear');
 		
 		anim2.add(objects.table1_data_cont,{y:[objects.table1_data_cont.y,-150]}, false, 0.25,'linear');
 		anim2.add(objects.table2_data_cont,{y:[objects.table2_data_cont.y,-150]}, false, 0.25,'linear');
@@ -2648,6 +2723,7 @@ async function load_resources() {
 	game_res.add('applause',git_src+'sounds/applause.mp3');
 	game_res.add('super_game',git_src+'sounds/super_game.mp3');
 	game_res.add('lose',git_src+'sounds/lose.mp3');
+	game_res.add('hint_on',git_src+'sounds/hint_on.mp3');
 	game_res.add('win',git_src+'sounds/win.mp3');
 	game_res.add('click',git_src+'sounds/click.mp3');
 	game_res.add('host_message',git_src+'sounds/host_message.mp3');
