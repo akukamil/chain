@@ -2221,6 +2221,12 @@ main_menu= {
 		anim2.add(objects.online_icon,{scale_x:[0,0.6666]}, true, 2,'easeOutBack');
 		
 		anim2.add(objects.desktop,{alpha:[0,1]}, true, 0.6,'linear');
+		
+		//vk
+		if (game_platform==='VK')
+		anim2.add(objects.vk_buttons_cont,{y:[-100,objects.vk_buttons_cont.sy]}, true, 0.65,'linear');	
+		
+		
 		music.activate();
 	},
 	
