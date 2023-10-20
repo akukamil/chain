@@ -2235,7 +2235,11 @@ main_menu= {
 		anim2.add(objects.mb_cont,{y:[objects.mb_cont.y,450]}, false, 0.5,'linear');
 		anim2.add(objects.main_title,{y:[objects.main_title.y,-300]}, false, 0.3,'linear');
 		anim2.add(objects.girl,{x:[objects.girl.x,-400]}, false, 0.4,'linear');
-		anim2.add(objects.online_icon,{alpha:[1,0]}, false, 0.6,'linear');				
+		anim2.add(objects.online_icon,{alpha:[1,0]}, false, 0.6,'linear');		
+
+		//vk
+		if(objects.vk_buttons_cont.visible)
+			anim2.add(objects.vk_buttons_cont,{y:[objects.vk_buttons_cont.y,-100]}, false, 0.75,'linear');	
 	},
 
 	async pb_down() {
