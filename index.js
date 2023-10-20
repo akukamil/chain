@@ -159,13 +159,13 @@ class player_card_class extends PIXI.Container {
 		this.vote_bcg=new PIXI.Sprite(gres.vote_bcg.texture);
 		this.vote_bcg.width=this.vote_bcg.height=60;
 		this.vote_bcg.x=40;
-		this.vote_bcg.y=-10;
+		this.vote_bcg.y=-5;
 		this.vote_bcg.visible=false;
 		
-		this.t_vote_res=new PIXI.BitmapText('0', {fontName: 'mfont', fontSize :25});
+		this.t_vote_res=new PIXI.BitmapText('0', {fontName: 'mfont', fontSize :30});
 		this.t_vote_res.anchor.set(0.5,0.5);
 		this.t_vote_res.x=70;
-		this.t_vote_res.y=20;
+		this.t_vote_res.y=25;
 		this.t_vote_res.tint=0x111111;
 		this.t_vote_res.visible=false;
 						
@@ -2058,8 +2058,8 @@ tables_menu={
 	
 	chat_activated:0,
 	hinst_timer:-1,
-	sec_to_hint0:30,
-	sec_to_hint1:15,
+	sec_to_hint0:3600,
+	sec_to_hint1:1800,
 	
 	activate(){				
 				
@@ -2112,8 +2112,7 @@ tables_menu={
 	},
 	
 	process_hints(){
-		
-		console.log('process_hints',this.sec_to_hint0,this.sec_to_hint1)
+
 		if (this.sec_to_hint0>0){
 			this.sec_to_hint0--;		
 			objects.t_time_hint0.text=this.sec_to_format(this.sec_to_hint0);				
