@@ -2419,6 +2419,32 @@ lb={
 
 }
 
+vk={
+	
+	invite_button_down(){
+		if (anim2.any_on())
+			return;
+		
+		sound.play('click');
+		vkBridge.send('VKWebAppShowInviteBox');
+		anim2.add(objects.vk_buttons_cont,{y:[objects.vk_buttons_cont.y,-100]}, false, 0.75,'linear');	
+		
+	},
+	
+	share_button_down(){
+		
+		if (anim2.any_on())
+			return;
+		
+		sound.play('click');
+		vkBridge.send('VKWebAppShowWallPostBox', { message: 'Я играю в Слабое Звено Онлайн и мне нравится!','attachments': 'https://vk.com/app51767594'})
+		anim2.add(objects.vk_buttons_cont,{y:[objects.vk_buttons_cont.y,-100]}, false, 0.75,'linear');	
+		
+	}
+	
+	
+}
+
 rules={
 	
 	active : 0,
