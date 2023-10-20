@@ -2846,7 +2846,7 @@ async function define_platform_and_language(env) {
 	if (s.includes('google_play')) {
 			
 		game_platform = 'GOOGLE_PLAY';	
-		LANG = await language_dialog.show();
+		LANG = 0;
 		return;
 	}	
 
