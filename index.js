@@ -2303,7 +2303,7 @@ lb={
 	active : 0,
 	cards_pos: [[370,10],[380,70],[390,130],[380,190],[360,250],[330,310],[290,370]],
 
-	show: function() {
+	show() {
 
 		this.active = 1;
 		objects.desktop.visible=true;
@@ -2331,7 +2331,7 @@ lb={
 
 	},
 
-	close: async function() {
+	async close() {
 
 		this.active = 0;
 		anim2.add(objects.leader_header,{y:[objects.leader_header.y,-50]}, true, 0.5,'easeInBack');
@@ -2344,7 +2344,7 @@ lb={
 
 	},
 
-	back_button_down: async function() {
+	async back_button_down() {
 
 		if (anim2.any_on()===true) {
 			sound.play('locked');
@@ -2353,12 +2353,11 @@ lb={
 
 		sound.play('click');
 		await this.close();
-		ad.show();
 		main_menu.activate();
 
 	},
 
-	update: function () {
+	update() {
 
 		fbs.ref("players").orderByChild('rating').limitToLast(25).once('value').then((snapshot) => {
 
