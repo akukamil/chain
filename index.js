@@ -740,6 +740,7 @@ music={
 		
 		if (turn_off||this.on){
 			this.on=0;
+			PIXI.sound.stopAll();
 			gres.music.sound.stop();			
 		} else{
 			this.on=1;
