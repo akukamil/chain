@@ -736,9 +736,9 @@ music={
 		}
 	},
 	
-	switch(){
+	switch(turn_off){
 		
-		if (this.on){
+		if (turn_off||this.on){
 			this.on=0;
 			gres.music.sound.stop();			
 		} else{
@@ -2719,7 +2719,8 @@ function vis_change() {
 
 	if (document.hidden === true){
 		
-		//game.sound_switch_down(0);
+		game.sound_switch_down(0);
+		music.switch(1);
 		hidden_state_start = Date.now();
 		fbs.ref(room_id+'/pending/'+my_data.uid).remove();	
 	}
