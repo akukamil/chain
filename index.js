@@ -2867,7 +2867,7 @@ async function define_platform_and_language(env) {
 	}	
 	
 	game_platform = 'UNKNOWN';	
-	LANG = await language_dialog.show();
+	LANG = 0;
 	
 	
 
