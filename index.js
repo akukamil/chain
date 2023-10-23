@@ -1270,8 +1270,8 @@ game={
 		//обновляем деньги
 		for (let uid in this.uid_to_pcards){
 			const rating=await fbs_once('players/'+uid+'/rating');
-			this.uid_to_pcards[uid].t_rating.text=rating||100;
-			this.uid_to_pcards[uid].rating=rating||100;
+			this.uid_to_pcards[uid].t_rating.text=rating||0;
+			this.uid_to_pcards[uid].rating=rating||0;
 		}
 	},
 			
