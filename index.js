@@ -199,59 +199,14 @@ class player_card_class extends PIXI.Container {
 			this.t_rating.tint=0xffffff;
 		}				
 	}
-	
-	add_info(info){		
-		this.t_comb.text=info;
-		anim2.add(this.t_comb,{alpha:[1,0]}, true, 3,'linear');				
-	}
-	
+		
 	async show_income(income){	
 		this.t_won.text='+'+income;
 		anim2.add(this.t_won,{y:[this.t_won.sy-50,this.t_won.sy],alpha:[0,1]}, true, 0.25,'linear',false);
 		await new Promise((resolve, reject) => {setTimeout(resolve, 8000);});
 		anim2.add(this.t_won,{y:[this.t_won.y,this.t_won.sy-50],alpha:[1,0]}, false, 0.25,'linear',false);
 	}
-	
-	show_action(event){		
-	
 		
-		
-		const action=event.data;
-		
-		objects.action_info.x=this.x+70;
-		objects.action_info.y=this.y+130;
-		objects.action_info.t_info.text=event.data;
-		
-		
-		let in_money=event.chips||event.bet_raise;
-		if (event.bet_raise!=null)
-			in_money=event.bet_raise;
-		
-		if (event.chips!=null)
-			in_money=event.chips;
-		
-		if(action==='FOLD') in_money=0;
-		
-		if (in_money) objects.action_info.t_info.text+=' '+in_money;			
-		anim2.add(objects.action_info,{alpha:[0,1]}, false, 3,'easeBridge',false);		
-	
-		if (this.uid!==my_data.uid){
-			if(action==='CHECK'||action==='CALL')
-				sound.play('check')
-			if(action==='BET'||action==='RAISE' )
-				sound.play('raise')	
-			if(action==='FOLD' )
-				sound.play('fold')	
-		}
-
-		
-	}
-			
-	set_cards(cards){
-		this.card0.card_index=cards[0];
-		this.card1.card_index=cards[1];		
-	}
-	
 	set_uid(uid){
 		
 		
@@ -265,64 +220,10 @@ class player_card_class extends PIXI.Container {
 			this.bcg.texture=gres.id_card_play_bcg.texture			
 		}else{			
 			this.bcg.texture=gres.id_card_bcg.texture			
-		}
+		}	
+	}
+	
 
-		
-	}
-	
-	change_balance(amount){
-		
-		
-		
-		
-		if(this.uid===my_data.uid){			
-			my_data.rating+=amount;		
-			if(my_data.rating<0)my_data.rating=0;
-			fbs.ref('players/' + my_data.uid + '/rating').set(my_data.rating);
-		}
-		
-		
-		this.rating+=amount;
-		this.t_rating.text=this.rating;		
-		
-	}
-	
-	run_timer(){
-		
-		objects.timer_bar.scale_x=1;
-		objects.timer_bar.x=this.x+30;
-		objects.timer_bar.y=this.y+105;
-		objects.timer_bar.tm=Date.now();
-		objects.timer_bar.visible=true;
-
-	}
-	
-	open_cards(){
-		
-		this.card0.open();
-		this.card1.open();	
-			
-		//определяем комбинацию
-		const cen_cards_opened=objects.cen_cards.filter(c=>c.opened===1)||[];
-		const it_cards=[this.card0.card_index, this.card1.card_index,...cen_cards_opened.map(c=>c.card_index)];
-
-		const comb=hand_check.check(it_cards);
-		const kickers=comb.data.map(d=>value_num_to_txt[d.value])
-		
-		this.hand_value=hand_check.get_total_value(comb);
-				
-		anim2.kill_anim(this.t_comb)
-		this.t_comb.text=comb_to_text[comb.name][LANG]+'\n'+kickers.join('-');	
-		this.t_comb.visible=true;
-		this.t_comb.alpha=1;
-		
-	}
-	
-	close_cards(){
-		this.card0.close();
-		this.card1.close();		
-		this.t_comb.visible=false;
-	}
 }
 
 class bank_point_class extends PIXI.Container {
@@ -993,7 +894,7 @@ game={
 			hint_text+='   Первая - '+first_letter;
 			
 		objects.t_hint.text=hint_text;
-		anim2.add(objects.t_hint,{alpha:[0,0.75]}, false, 9,'easeBridge');			
+		anim2.add(objects.t_hint,{alpha:[0,0.75]}, false, 9,'easeBridge',false);			
 	},
 		
 	game_ans(data){
