@@ -1384,7 +1384,7 @@ game={
 		for (let uid in this.uid_to_pcards){			
 			await this.update_players_cache_data(uid);	
 			const pcard=this.uid_to_pcards[uid];
-			pcard.name.text=players_cache[uid].name.substring(0, 10);
+			pcard.name.text=players_cache[uid].name.substring(0, 8);
 			this.load_avatar({uid,tar_obj:pcard.avatar})
 		}
 			
