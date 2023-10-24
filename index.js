@@ -708,6 +708,9 @@ test_game={
 		this.on=1;
 		this.start();
 		
+		//скрываем данные от суперигры
+		objects.ans_icons_cont.visible=false;
+		
 		//если это просмотр и банк скрыт то показываем его
 		if (!objects.bank_cont.visible)
 			anim2.add(objects.bank_cont,{x:[-100,0]}, true, 1,'easeOutBack');
