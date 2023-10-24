@@ -385,18 +385,18 @@ anim2 = {
 	slot: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
 		
 	
-	any_on : function() {		
+	any_on() {		
 		for (let s of this.slot)
 			if (s !== null&&s.block)
 				return true
 		return false;			
 	},
 	
-	linear: function(x) {
+	linear(x) {
 		return x
 	},
 	
-	kill_anim: function(obj) {
+	kill_anim(obj) {
 		
 		for (var i=0;i<this.slot.length;i++)
 			if (this.slot[i]!==null)
@@ -408,11 +408,30 @@ anim2 = {
 	
 	},
 	
-	easeOutBack: function(x) {
+	flick(x){
+		
+		return Math.abs(Math.sin(x*6.5*3.141593));
+		
+	},
+	
+	easeBridge(x){
+		
+		if(x<0.1)
+			return x*10;
+		if(x>0.9)
+			return (1-x)*10;
+		return 1		
+	},
+	
+	easeOutBack(x) {
 		return 1 + this.c3 * Math.pow(x - 1, 3) + this.c1 * Math.pow(x - 1, 2);
 	},
 	
-	easeOutElastic: function(x) {
+	easeOutBack2(x) {
+		return -5.875*Math.pow(x, 2)+6.875*x;
+	},
+	
+	easeOutElastic(x) {
 		return x === 0
 			? 0
 			: x === 1
@@ -420,23 +439,23 @@ anim2 = {
 			: Math.pow(2, -10 * x) * Math.sin((x * 10 - 0.75) * this.c4) + 1;
 	},
 	
-	easeOutSine: function(x) {
+	easeOutSine(x) {
 		return Math.sin( x * Math.PI * 0.5);
 	},
 	
-	easeOutCubic: function(x) {
+	easeOutCubic(x) {
 		return 1 - Math.pow(1 - x, 3);
 	},
 	
-	easeInBack: function(x) {
+	easeInBack(x) {
 		return this.c3 * x * x * x - this.c1 * x * x;
 	},
 	
-	easeInQuad: function(x) {
+	easeInQuad(x) {
 		return x * x;
 	},
 	
-	easeOutBounce: function(x) {
+	easeOutBounce(x) {
 		const n1 = 7.5625;
 		const d1 = 2.75;
 
@@ -451,36 +470,26 @@ anim2 = {
 		}
 	},
 	
-	easeBridge(x){
-		
-		if(x<0.1)
-			return x*10;
-		if(x>0.9)
-			return (1-x)*10;
-		return 1		
-	},
-	
-	easeInCubic: function(x) {
+	easeInCubic(x) {
 		return x * x * x;
 	},
 	
-	ease2back : function(x) {
+	ease2back(x) {
 		return Math.sin(x*Math.PI*2);
 	},
 	
-	easeInOutCubic: function(x) {
+	easeInOutCubic(x) {
 		
 		return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
 	},
 	
-	shake : function(x) {
+	shake(x) {
 		
-		return Math.sin(x*Math.PI*2);
-		
+		return Math.sin(x*2 * Math.PI);	
 		
 	},	
 	
-	add : function(obj, params, vis_on_end, time, func, block=true) {
+	add (obj, params, vis_on_end, time, func, block=true) {
 				
 		//если уже идет анимация данного спрайта то отменяем ее
 		anim2.kill_anim(obj);
@@ -503,7 +512,7 @@ anim2 = {
 				//для возвратных функцие конечное значение равно начальному
 				if (func === 'ease2back' || func === 'shake')
 					for (let key in params)
-						params[key][1]=params[key][0];					
+						params[key][1]=params[key][0];				
 					
 				this.slot[i] = {
 					obj,
@@ -547,7 +556,7 @@ anim2 = {
 
 	},	
 		
-	process: function () {
+	process() {
 		
 		for (var i = 0; i < this.slot.length; i++)
 		{
@@ -578,7 +587,7 @@ anim2 = {
 		
 	},
 	
-	wait : async function(time) {
+	async wait(time) {
 		
 		await this.add(this.empty_spr,{x:[0, 1]}, false, time,'linear');	
 		
@@ -687,6 +696,75 @@ host={
 	
 }
 
+test_game={
+	
+	cor_ans:'241514124',
+	on:0,
+	bank_level:0,
+	
+	activate(){
+		
+		this.bank_level=0;
+		this.on=1;
+		this.start();
+		
+		//если это просмотр и банк скрыт то показываем его
+		if (!objects.bank_cont.visible)
+			anim2.add(objects.bank_cont,{x:[-100,0]}, true, 1,'easeOutBack');
+		
+		
+		objects.t_time_to_single_game.visible=false;
+		//устанавливаем банк на начало
+		game.set_bank_level(0);		
+		
+	},
+	
+	start(){
+		
+		const q_id=irnd(0,QUESTIONS.length-1);
+		this.cor_ans=QUESTIONS[q_id][0];
+		host.add_msg('ТЕСТ',QUESTIONS[q_id][1])
+		
+		keyboard.kill();
+		keyboard.show();
+		keyboard.callback=this.ans.bind(test_game);
+		
+	},
+	
+	stop(){
+		
+		this.on=0;
+	},
+	
+	ans(t){	
+		
+		if (t!==this.cor_ans){
+			anim2.add(objects.keyboard,{x:[objects.keyboard.x, objects.keyboard.x+10]}, true, 0.15,'shake');			
+			sound.play('wrong_ans');
+			this.bank_level=0;
+			game.set_bank_level(0,0);
+		}else{
+			sound.play('correct_ans')
+			this.start();		
+			this.bank_level++;
+			if(this.bank_level>=BANK_DATA.length)
+				this.bank_level=0;
+			game.set_bank_level(this.bank_level,0);
+		}
+		
+		if (t==='ПАС'){
+			const q_id=irnd(0,QUESTIONS.length-1);
+			this.cor_ans=QUESTIONS[q_id][0];
+			host.add_msg('ТЕСТ',QUESTIONS[q_id][1])
+			this.bank_level=0;
+			game.set_bank_level(0,0);
+		}
+
+		console.log(t);		
+	}	
+	
+}
+
 game={
 	
 	my_cards:[],
@@ -702,6 +780,7 @@ game={
 	cur_question:0,
 	first_letter_bonus:0,
 	num_of_letters_bonus:0,
+	wait_players_start:0,
 		
 	async activate(){
 		
@@ -709,12 +788,12 @@ game={
 		await game.analyse_table();		
 
 		//показываем аватарки
-		objects.avatars_cont.visible=true;		
-		
+		objects.avatars_cont.visible=true;	
+				
 		//показываем кнопки но без чата
 		objects.exit_button.pointerdown=function(){game.exit_down()};
 		objects.chat_button.visible=false;
-		objects.control_buttons.y=50;
+		objects.control_buttons.y=190;
 		anim2.add(objects.control_buttons,{x:[800,objects.control_buttons.sx]}, true, 0.24,'linear');	
 									
 		//keep-alive для стола		
@@ -747,7 +826,10 @@ game={
 			
 			if(data.type==='put_bank')
 				game.put_bank(data);	
-						
+					
+			if(data.type==='no_players')
+				game.no_players_event();	
+					
 			if(data.type==='q')
 				game.game_question_event(data);	
 			
@@ -785,8 +867,15 @@ game={
 			const card=objects.pcards[i];
 			card.x=110+i*82;
 		}
-				
+
 		this.players=data.players;	
+
+		//закрываем если открыта
+		if (objects.keyboard_cont.visible)
+			keyboard.close();
+		
+		//останавливаем тестовую игру
+		test_game.stop();
 
 		//скрываем данные от суперигры
 		objects.ans_icons_cont.visible=false;
@@ -852,9 +941,7 @@ game={
 		const q=this.cur_question+'/'+this.num_of_questions;
 		this.cur_question++;
 		host.add_msg('ВОПРОС '+q,QUESTIONS[data.q_id][1],is_bank)
-		
-		
-					
+									
 		//убираем все хайлайты кроме того кого спрашивают
 		for (const [uid, card] of Object.entries(this.uid_to_pcards)){
 			if (uid===data.uid){
@@ -870,18 +957,17 @@ game={
 		
 		//если это вопрос не мне или я не в игре
 		if(data.uid!==my_data.uid||!this.iam_active) return		
-		
-		
+				
 		//подсказка
-		this.show_hint(QUESTIONS[data.q_id][0]);
-		
+		this.show_hint(QUESTIONS[data.q_id][0]);		
 		
 		let ans_data = await keyboard.open();
+		if (ans_data==='KILL') return;
 		keyboard.close();
 		fbs.ref(room_id+'/players_actions').set({uid:my_data.uid,type:'ans',ans:ans_data,tm:Date.now()})
 		
 	},
-	
+			
 	show_hint(correct_ans){
 		
 		const first_letter=correct_ans[0];
@@ -931,6 +1017,17 @@ game={
 		
 		this.set_bank_level(data.b_level,data.b_total);
 		console.log(data);	
+	},
+	
+	no_players_event(){
+		
+		//закрываем если открыта
+		if (objects.keyboard_cont.visible)
+			keyboard.close();
+		
+		host.add_msg('ИНФО','ВСЕ ИГРОКИ ПОКИНУЛИ ИГРУ...')
+		
+		this.show_status_window('Ждем игроков...');
 	},
 	
 	round_finish_event(data){	
@@ -1160,6 +1257,7 @@ game={
 	show_status_window(t){
 		
 		objects.t_table_status0.text=t||'...';
+		this.wait_players_start=Date.now();
 		
 		//сразу сколько игроков есть в pending
 		fbs.ref(room_id+'/pending').on('value',data=>{
@@ -1169,8 +1267,11 @@ game={
 		if (objects.bank_cont.visible)
 			anim2.add(objects.bank_cont,{x:[0,-100]}, true, 0.5,'linear');	
 				
+		if (t==='Ждем игроков...')
+			objects.t_time_to_single_game.visible=true;
+				
 		//показываем окошко статуса
-		anim2.add(objects.table_status_cont,{y:[450,objects.table_status_cont.sy]}, true, 0.2,'linear');	
+		anim2.add(objects.table_status_cont,{y:[-150,objects.table_status_cont.sy]}, true, 0.2,'linear');	
 	},
 		
 	close_status_window(){
@@ -1178,8 +1279,10 @@ game={
 		//сразу сколько игроков есть в pending
 		fbs.ref(room_id+'/pending').off();
 		
+		objects.t_time_to_single_game.visible=false;
+		
 		//показываем окошко статуса
-		anim2.add(objects.table_status_cont,{y:[objects.table_status_cont.y,450]}, false, 0.2,'linear');		
+		anim2.add(objects.table_status_cont,{y:[objects.table_status_cont.y,-150]}, false, 0.2,'linear');		
 	},
 		
 	show_pending_players(players){
@@ -1225,7 +1328,7 @@ game={
 			return;
 		}
 		
-		this.show_status_window('Ждите завершения игры...');
+		this.show_status_window('Идет игра. Ждите завершения игры...');
 				
 		players=info.players.map(uid=>({uid}));			
 		await this.init_active_players(players);			
@@ -1343,17 +1446,25 @@ game={
 			}			
 		}
 		
-		if (objects.table_status_cont.visible){
+		if (objects.table_status_cont.visible&&objects.table_status_cont.ready){
 			
 			objects.table_status_circle.rotation+=0.2;				
 			objects.table_status_pic.scale_y=Math.sin(game_tick)*0.666;
+			
+			if(!test_game.on&&objects.t_table_status0.text==='Ждем игроков...'){
+				const wait_players_time=Date.now()-this.wait_players_start;
+				const time_to_single_game=15-(~~(wait_players_time*0.001));
+				objects.t_time_to_single_game.text='До одиночной игры осталось '+time_to_single_game+' секунд';
+				if (time_to_single_game<=0)
+					test_game.activate();
+			}
+
 		}
 	
 		//периодически покачиваем голову ведущей
 		let x=((game_tick*3) % 16)-8;
 		const x2=x*x;		
-		objects.host_img.angle=10*(1-x2)*Math.exp(-0.5*x2);		
-	
+		objects.host_img.angle=10*(1-x2)*Math.exp(-0.5*x2);	
 		
 	},
 	
@@ -1425,8 +1536,10 @@ game={
 		objects.ans_icons_cont.visible=false;
 		objects.bank_cont.visible=false;
 		objects.avatars_cont.visible=false;
-		objects.keyboard_cont.visible=false;
+		objects.keyboard_cont.visible=false;		
+		objects.timer_bar.visible=false;
 		
+		test_game.stop();
 		
 		clearInterval(this.pending_timer);
 		fbs.ref(room_id+'/server_events').off();
@@ -1693,20 +1806,33 @@ keep_alive= function() {
 keyboard={
 	
 	resolver : 0,
+	callback:function(t){},
 	//x,y,x2,y2
 	keys_data:[[501,8.38,561,45.88,'<<'],[13.73,8.38,46.04,45.88,'Й'],[53.44,8.38,85.75,45.88,'Ц'],[93.15,8.38,125.46,45.88,'У'],[132.85,8.38,165.16,45.88,'К'],[172.56,8.38,204.87,45.88,'Е'],[212.27,8.38,244.58,45.88,'Н'],[251.97,8.38,284.28,45.88,'Г'],[291.68,8.38,323.99,45.88,'Ш'],[331.39,8.38,363.7,45.88,'Щ'],[371.09,8.38,403.4,45.88,'З'],[410.8,8.38,443.11,45.88,'Х'],[450.51,8.38,482.82,45.88,'Ъ'],[13.73,53.97,49.65,91.47,'Ф'],[57.05,53.97,92.97,91.47,'Ы'],[100.37,53.97,136.29,91.47,'В'],[143.68,53.97,179.6,91.47,'А'],[187,53.97,222.92,91.47,'П'],[230.32,53.97,266.24,91.47,'Р'],[273.63,53.97,309.55,91.47,'О'],[316.95,53.97,352.87,91.47,'Л'],[360.27,53.97,396.19,91.47,'Д'],[403.58,53.97,439.5,91.47,'Ж'],[446.9,53.97,482.82,91.47,'Э'],[70.79,98.75,103.66,136.25,'Я'],[111.05,98.75,143.92,136.25,'Ч'],[151.31,98.75,184.18,136.25,'С'],[191.58,98.75,224.45,136.25,'М'],[231.84,98.75,264.71,136.25,'И'],[272.11,98.75,304.98,136.25,'Т'],[312.37,98.75,345.24,136.25,'Ь'],[352.64,98.75,385.51,136.25,'Б'],[392.9,98.75,425.77,136.25,'Ю'],[501,98.75,560.66,136.25,'OK'],[501,53.97,561,91.47,'ПАС']],
 	
 	open(){		
 		
-		objects.keyboard_text.text='';
-		anim2.add(objects.keyboard_cont,{y:[450, objects.keyboard_cont.sy]}, true, 0.5,'linear');
+		this.show();
 		
 		return new Promise(resolve=>{			
 			keyboard.resolver=resolve;			
 		})
 		
 	},
+	
+	kill(){
 		
+		if (typeof this.resolver === 'function') this.resolver('KILL');	
+		
+	},
+	
+	show(){		
+		
+		objects.keyboard_text.text='';
+		anim2.add(objects.keyboard_cont,{y:[450, objects.keyboard_cont.sy]}, true, 0.5,'linear');
+		
+	},
+			
 	close(){
 		
 		if(this.resolver) this.resolver();
@@ -1807,23 +1933,23 @@ keyboard={
 		if(key==='OK'){			
 			
 			//если ничего не написано
-			if (!objects.keyboard_text.text) return;
-		
-			this.resolver(objects.keyboard_text.text);			
+			if (!objects.keyboard_text.text) return;		
+			if (typeof this.resolver === 'function') this.resolver(objects.keyboard_text.text);	
+			this.callback(objects.keyboard_text.text);
 			objects.keyboard_text.text=''
 			return;
 		}	
 
 		if(key==='ПАС'){			
 					
-			this.resolver('ПАС');			
+			if (typeof this.resolver === 'function') this.resolver('ПАС');			
 			objects.keyboard_text.text=''
+			this.callback(key);
 			return;
 		}			
 
 		//добавляем значение к слову
-		objects.keyboard_text.text+=key;
-		
+		objects.keyboard_text.text+=key;		
 	}
 		
 }
@@ -2648,7 +2774,7 @@ async function load_resources() {
 	document.getElementById("m_progress").style.display = 'flex';
 
 	let git_src="https://akukamil.github.io/chain/"
-	git_src=""
+	//git_src=""
 
 	//подпапка с ресурсами
 	let lang_pack = ['RUS','ENG'][LANG];	
@@ -3001,7 +3127,6 @@ function main_loop() {
 	for (let key in some_process)
 		some_process[key]();	
 	
-	requestAnimationFrame(main_loop);
-	
+	requestAnimationFrame(main_loop);	
 	
 }
