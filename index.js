@@ -712,6 +712,8 @@ test_game={
 		if (!objects.bank_cont.visible)
 			anim2.add(objects.bank_cont,{x:[-100,0]}, true, 1,'easeOutBack');
 		
+		//скрываем карточки
+		objects.pcards.forEach(c=>{c.visible=false});
 		
 		objects.t_time_to_single_game.visible=false;
 		//устанавливаем банк на начало
@@ -720,6 +722,12 @@ test_game={
 	},
 	
 	start(){
+		
+		
+		//если это просмотр и банк скрыт то показываем его
+		if (!objects.bank_cont.visible)
+			anim2.add(objects.bank_cont,{x:[-100,0]}, true, 1,'easeOutBack');
+		game.set_bank_level(0);	
 		
 		const q_id=irnd(0,QUESTIONS.length-1);
 		this.cor_ans=QUESTIONS[q_id][0];
@@ -734,6 +742,7 @@ test_game={
 	stop(){
 		
 		this.on=0;
+		keyboard.callback=function(){};
 	},
 	
 	ans(t){	
@@ -1454,7 +1463,7 @@ game={
 			if(!test_game.on&&objects.t_table_status0.text==='Ждем игроков...'){
 				const wait_players_time=Date.now()-this.wait_players_start;
 				const time_to_single_game=15-(~~(wait_players_time*0.001));
-				objects.t_time_to_single_game.text='До одиночной игры осталось '+time_to_single_game+' секунд';
+				objects.t_time_to_single_game.text='До начала одиночной игры осталось '+time_to_single_game+' секунд';
 				if (time_to_single_game<=0)
 					test_game.activate();
 			}
