@@ -701,6 +701,7 @@ test_game={
 	cor_ans:'241514124',
 	on:0,
 	bank_level:0,
+	timer:0,
 	
 	activate(){
 		
@@ -722,6 +723,10 @@ test_game={
 		//устанавливаем банк на начало
 		game.set_bank_level(0);		
 		
+		host.add_msg('ИНФО','ПОКА МЫ ЖДЕМ ИГРОКОВ, СЫГРАЕМ В ОДИНОЧНУЮ ИГРУ...')
+		
+		this.timer=setTimeout(function(){test_game.start()},3000);
+		
 	},
 	
 	start(){
@@ -734,7 +739,7 @@ test_game={
 		
 		const q_id=irnd(0,QUESTIONS.length-1);
 		this.cor_ans=QUESTIONS[q_id][0];
-		host.add_msg('ТЕСТ',QUESTIONS[q_id][1])
+		host.add_msg('ВОПРОС',QUESTIONS[q_id][1])
 		
 		keyboard.kill();
 		keyboard.show();
@@ -744,6 +749,7 @@ test_game={
 	
 	stop(){
 		
+		clearTimeout(this.timer);
 		this.on=0;
 		keyboard.callback=function(){};
 	},
@@ -973,7 +979,7 @@ game={
 		//подсказка
 		this.show_hint(QUESTIONS[data.q_id][0]);		
 		
-		let ans_data = await keyboard.open();
+		let ans_data = await keyboard.open(1);
 		if (ans_data==='KILL') return;
 		keyboard.close();
 		fbs.ref(room_id+'/players_actions').set({uid:my_data.uid,type:'ans',ans:ans_data,tm:Date.now()})
@@ -1486,15 +1492,6 @@ game={
 		
 	},
 	
-	status_exit_down(){
-		
-		if(anim2.any_on())return;
-		
-		this.close();
-		main_menu.activate();
-		
-	},
-	
 	sound_switch_down(val){		
 		
 		if (val!==undefined)
@@ -1839,8 +1836,8 @@ keyboard={
 	},
 	
 	show(){		
-		
-		objects.keyboard_text.text='';
+	
+		objects.keyboard_text.text='';			
 		anim2.add(objects.keyboard_cont,{y:[450, objects.keyboard_cont.sy]}, true, 0.5,'linear');
 		
 	},
@@ -1929,7 +1926,7 @@ keyboard={
 	process_key(key_data){
 
 		if(!key_data) return;
-		
+				
 		if (objects.keyboard_text.text.length>40) return;
 		
 		const key=key_data[4];
