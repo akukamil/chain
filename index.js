@@ -3047,8 +3047,9 @@ async function init_game_env(env) {
 
 	//анимация лупы
 	some_process.loup_anim=function() {
-		objects.id_loup.x=20*Math.sin(game_tick*8)+90;
-		objects.id_loup.y=20*Math.cos(game_tick*8)+150;
+		//objects.id_loup.x=20*Math.sin(game_tick*8)+90;
+		//objects.id_loup.y=20*Math.cos(game_tick*8)+150;
+		objects.id_loup.rotation+=0.1;
 	}
 
 	//загружаем аватарку игрока
