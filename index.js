@@ -713,8 +713,7 @@ sp_game={
 		objects.ans_icons_cont.visible=false;
 		
 		//если это просмотр и банк скрыт то показываем его
-		if (!objects.bank_cont.visible)
-			anim2.add(objects.bank_cont,{x:[-100,0]}, true, 1,'easeOutBack');
+		anim2.add(objects.bank_cont,{x:[-100,0]}, true, 1,'easeOutBack');
 		
 		//скрываем карточки
 		objects.pcards.forEach(c=>{c.visible=false;c.cross.visible=false;c.alpha=1});
@@ -1213,7 +1212,7 @@ game={
 				
 		//убираем банк
 		if (objects.bank_cont.visible)
-			anim2.add(objects.bank_cont,{x:[0,-100]}, true, 0.5,'linear');		
+			anim2.add(objects.bank_cont,{x:[0,-100]}, false, 0.5,'linear');		
 		
 		//скрываем игроков которые вне игры
 		for (const [uid, card] of Object.entries(this.uid_to_pcards))
@@ -1329,7 +1328,7 @@ game={
 		})
 		
 		if (objects.bank_cont.visible)
-			anim2.add(objects.bank_cont,{x:[0,-100]}, true, 0.5,'linear');	
+			anim2.add(objects.bank_cont,{x:[0,-100]}, false, 0.5,'linear');	
 				
 		if (t==='Ждем игроков...')
 			objects.t_time_to_single_game.visible=true;
