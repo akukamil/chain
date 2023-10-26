@@ -726,6 +726,7 @@ sp_game={
 		pcard.set_as_mine(1);			
 		pcard.name.text=my_data.name.substring(0, 8);
 		pcard.t_rating.text=my_data.rating||0;
+		pcard.avatar.texture=my_data.texture;
 					
 		
 		objects.t_time_to_single_game.visible=false;
@@ -2691,7 +2692,7 @@ auth2={
 			
 			my_data.uid = this.search_in_local_storage() || this.get_random_uid_for_local('GM_');
 			my_data.name = this.get_random_name(my_data.uid);
-			my_data.pic_url = 'https://avatars.dicebear.com/api/adventurer/' + my_data.uid + '.svg';	
+			my_data.pic_url = 'https://api.dicebear.com/7.x/adventurer/svg?seed='+my_data.uid;	
 			
 		}
 				
@@ -2711,7 +2712,7 @@ auth2={
 			my_data.pic_url = _player.getPhoto('medium');
 			
 			if (my_data.pic_url === 'https://games-sdk.yandex.ru/games/api/sdk/v1/player/avatar/0/islands-retina-medium')
-				my_data.pic_url = 'https://avatars.dicebear.com/api/adventurer/' + my_data.uid + '.svg';
+				my_data.pic_url = 'https://api.dicebear.com/7.x/adventurer/svg?seed='+my_data.uid;	
 			
 			if (my_data.name === '')
 				my_data.name = this.get_random_name(my_data.uid);
@@ -2744,7 +2745,7 @@ auth2={
 
 			my_data.uid = this.search_in_local_storage() || this.get_random_uid_for_local('GP_');
 			my_data.name = this.get_random_name(my_data.uid);
-			my_data.pic_url = 'https://avatars.dicebear.com/api/adventurer/' + my_data.uid + '.svg';	
+			my_data.pic_url = 'https://api.dicebear.com/7.x/adventurer/svg?seed='+my_data.uid;	
 			return;
 		}
 		
@@ -2752,14 +2753,14 @@ auth2={
 
 			my_data.uid = this.search_in_local_storage() || this.get_random_uid_for_local('RS_');
 			my_data.name = this.get_random_name(my_data.uid);
-			my_data.pic_url = 'https://avatars.dicebear.com/api/adventurer/' + my_data.uid + '.svg';	
+			my_data.pic_url = 'https://api.dicebear.com/7.x/adventurer/svg?seed='+my_data.uid;		
 			return;
 		}
 		
 		if (game_platform === 'DEBUG') {		
 
 			my_data.name = my_data.uid = 'debug' + prompt('Отладка. Введите ID', 100);
-			my_data.pic_url = 'https://avatars.dicebear.com/api/adventurer/' + my_data.uid + '.svg';		
+			my_data.pic_url = 'https://api.dicebear.com/7.x/adventurer/svg?seed='+my_data.uid;			
 			return;
 		}
 		
@@ -2769,7 +2770,7 @@ auth2={
 			try {await this.load_script('https://sdk.crazygames.com/crazygames-sdk-v1.js')} catch (e) {alert(e)};			
 			my_data.uid = this.search_in_local_storage() || this.get_random_uid_for_local('CG_');
 			my_data.name = this.get_random_name(my_data.uid) + ' (' + country_code + ')';
-			my_data.pic_url = 'https://avatars.dicebear.com/api/adventurer/' + my_data.uid + '.svg';	
+			my_data.pic_url = 'https://api.dicebear.com/7.x/adventurer/svg?seed='+my_data.uid;	
 			let crazysdk = window.CrazyGames.CrazySDK.getInstance();
 			crazysdk.init();			
 			return;
@@ -2781,7 +2782,7 @@ auth2={
 			//alert('Неизвестная платформа. Кто Вы?')
 			my_data.uid = this.search_in_local_storage() || this.get_random_uid_for_local('LS_');
 			my_data.name = this.get_random_name(my_data.uid);
-			my_data.pic_url = 'https://avatars.dicebear.com/api/adventurer/' + my_data.uid + '.svg';	
+			my_data.pic_url = 'https://api.dicebear.com/7.x/adventurer/svg?seed='+my_data.uid;	
 		}
 	
 		
@@ -3114,6 +3115,7 @@ async function init_game_env(env) {
 		loader.add("my_avatar", my_data.pic_url,{loadType: PIXI.LoaderResource.LOAD_TYPE.IMAGE, timeout: 5000});
 		loader.load(function(l,r) {	resolve(l)});
 	});
+	my_data.texture=loader.resources.my_avatar.texture;
 
 	//устанавливаем фотки в попап и другие карточки
 	objects.id_avatar.texture = loader.resources.my_avatar.texture;
