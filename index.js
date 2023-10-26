@@ -716,9 +716,16 @@ sp_game={
 		anim2.add(objects.bank_cont,{x:[-100,0]}, true, 1,'easeOutBack');
 		
 		//скрываем карточки
-		objects.pcards.forEach(c=>{c.visible=false;c.cross.visible=false;c.alpha=1});
+		//расставляем иконки
+		for(let i=0;i<objects.pcards.length;i++){
+			const card=objects.pcards[i];
+			card.cross.visible=false;
+			card.alpha=1;
+			card.x=110+i*82;
+			card.visible=false;
+		}
 		
-		
+		//а первую карточку включаем так как это моя
 		const pcard=objects.pcards[0];
 		pcard.visible=true;
 		pcard.active=1;
