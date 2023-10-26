@@ -1070,6 +1070,7 @@ game={
 				this.iam_active=0;
 				this.close();
 				tables_menu.activate();
+				return;
 			}
 			
 			//если больше нет игроков (они куда-то делись)
