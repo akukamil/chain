@@ -772,6 +772,7 @@ sp_game={
 	reset_bank_ladder(){
 		
 		if (!this.on) return;
+		
 		game.set_bank_level(0);		
 		this.bank_level=0;
 		
@@ -1065,7 +1066,11 @@ game={
 			anim2.add(card.cross,{scale_xy:[0,0.666]}, true, 0.8,'easeOutBack');
 			card.alpha=0.25;
 			
-			if (card.uid===my_data.uid) this.iam_active=0;
+			if (card.uid===my_data.uid) {
+				this.iam_active=0;
+				this.close();
+				tables_menu.activate();
+			}
 			
 			//если больше нет игроков (они куда-то делись)
 			if (this.count_active_players()<2){	
@@ -1612,79 +1617,6 @@ game={
 		fbs.ref(room_id+'/pending').off();
 	}
 		
-}
-
-timer = {
-	
-	id : 0,
-	time_left : 0,
-	disconnect_time : 0,
-	
-	start : function(player, t) {
-		
-		this.clear();
-		this.disconnect_time = 0;
-		this.time_left = 30 || t;
-		this.id = setTimeout(timer.check.bind(timer),1000);
-		objects.timer_cont.visible = true;
-		objects.timer_text.text = this.time_left;
-		
-		if (player === ME)
-			objects.timer_cont.y = 305;
-		else
-			objects.timer_cont.y = 145;
-		
-		anim2.add(objects.timer_cont,{scale_x:[0, 1]}, true, 0.2,'linear');	
-				
-	},
-	
-	stop : function() {
-			
-		anim2.add(objects.timer_cont,{scale_x:[1, 0]}, false, 0.2,'linear');	
-		this.clear();
-		
-	},
-	
-	clear : function() {
-
-		clearTimeout(this.id);
-		
-	},
-	
-	check : function() {
-		
-		this.time_left--;
-		
-		if (turn === ME && this.time_left === 0)
-			bet_dialog.no_time();
-		
-		if (turn === OPP && this.time_left === -5)
-			bet_making.no_time();
-		
-		if (this.time_left === 5)
-			sound.play('clock');
-		
-		if (connected === 0) {
-			
-			this.disconnect_time++;		
-			if (this.disconnect_time > 5) {
-				bet_dialog.no_connection();
-				bet_making.no_connection();				
-			}			
-		}
-
-		
-		objects.timer_text.text = this.time_left;
-		this.id = setTimeout(timer.check.bind(timer),1000);		
-		
-	},
-	
-	reset : function() {
-		
-				
-		
-	}
-	
 }
 
 make_text = function (obj, text, max_width) {
@@ -2857,7 +2789,7 @@ async function load_resources() {
 	game_res.add('host_message',git_src+'sounds/host_message.mp3');
 	game_res.add('close',git_src+'sounds/close.mp3');
 	game_res.add('locked',git_src+'sounds/locked.mp3');
-	game_res.add('clock',git_src+'sounds/clock.mp3');
+	game_res.add('lose_bank',git_src+'sounds/lose_bank.mp3');
 	game_res.add('correct_ans',git_src+'sounds/correct_ans.mp3');
 	game_res.add('wrong_ans',git_src+'sounds/wrong_ans.mp3');
 	game_res.add('vote_done',git_src+'sounds/vote_done.mp3');
