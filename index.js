@@ -23,7 +23,7 @@ class lb_player_card_class extends PIXI.Container{
 	constructor(x,y,place) {
 		super();
 
-		this.bcg=new PIXI.Sprite(game_res.resources.lb_player_card_bcg.texture);
+		this.bcg=new PIXI.Sprite(gres.lb_player_card_bcg.texture);
 		this.bcg.interactive=true;
 		this.bcg.pointerover=function(){this.tint=0x55ffff};
 		this.bcg.pointerout=function(){this.tint=0xffffff};
@@ -1314,7 +1314,7 @@ game={
 		}		
 			
 		//показываем ответ
-		objects.player_ans_cont.x=card.x+35;		
+		objects.player_ans_cont.x=card.x+40;		
 		anim2.add(objects.player_ans_cont,{alpha:[0,1]}, false, 4,'easeBridge',false);
 	},
 	
@@ -3104,9 +3104,9 @@ async function init_game_env(env) {
 
 	//анимация лупы
 	some_process.loup_anim=function() {
-		//objects.id_loup.x=20*Math.sin(game_tick*8)+90;
-		//objects.id_loup.y=20*Math.cos(game_tick*8)+150;
-		objects.id_loup.rotation+=0.1;
+		objects.id_loup.x=20*Math.sin(game_tick*8)+90;
+		objects.id_loup.y=20*Math.cos(game_tick*8)+150;
+		//objects.id_loup.rotation+=0.1;
 	}
 
 	//загружаем аватарку игрока
@@ -3115,10 +3115,8 @@ async function init_game_env(env) {
 		loader.add("my_avatar", my_data.pic_url,{loadType: PIXI.LoaderResource.LOAD_TYPE.IMAGE, timeout: 5000});
 		loader.load(function(l,r) {	resolve(l)});
 	});
-	my_data.texture=loader.resources.my_avatar.texture;
+	objects.id_avatar.texture = my_data.texture=loader.resources.my_avatar.texture;
 
-	//устанавливаем фотки в попап и другие карточки
-	objects.id_avatar.texture = loader.resources.my_avatar.texture;
 		
 	document.addEventListener("visibilitychange", vis_change);
 	window.addEventListener('keydown', function(event) { keyboard.keydown(event.key); chat_keyboard.keydown(event.key)});
