@@ -732,9 +732,9 @@ sp_game={
 		//устанавливаем банк на начало
 		game.set_bank_level(0);		
 		
-		host.add_msg('ИНФО','ПОКА МЫ ЖДЕМ ИГРОКОВ, СЫГРАЕМ В ОДИНОЧНУЮ ИГРУ...')
+		host.add_msg('ИНФО','ПОКА МЫ ЖДЕМ ИГРОКОВ, СЫГРАЕМ В ОДИНОЧНУЮ ИГРУ. ДЕНЬГИ ПОЛОЖЕННЫЕ В БАНК, СРАЗУ ЗАЧИСЛЯТСЯ НА ВАШ СЧЕТ.')
 		
-		this.timer=setTimeout(function(){sp_game.start()},3000);
+		this.timer=setTimeout(function(){sp_game.start()},5000);
 		
 	},
 	
