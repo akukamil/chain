@@ -696,18 +696,18 @@ host={
 	
 }
 
-test_game={
+sp_game={
 	
 	cor_ans:'241514124',
 	on:0,
 	bank_level:0,
 	timer:0,
+	BANK_DATA:[0,1,2,3,4,5,10,15,30,40,50],
 	
 	activate(){
 		
 		this.bank_level=0;
 		this.on=1;
-		this.start();
 		
 		//скрываем данные от суперигры
 		objects.ans_icons_cont.visible=false;
@@ -717,7 +717,16 @@ test_game={
 			anim2.add(objects.bank_cont,{x:[-100,0]}, true, 1,'easeOutBack');
 		
 		//скрываем карточки
-		objects.pcards.forEach(c=>{c.visible=false});
+		objects.pcards.forEach(c=>{c.visible=false;c.cross.visible=false;c.alpha=1});
+		
+		
+		const pcard=objects.pcards[0];
+		pcard.visible=true;
+		pcard.active=1;
+		pcard.set_as_mine(1);			
+		pcard.name.text=my_data.name.substring(0, 8);
+		pcard.t_rating.text=my_data.rating||0;
+					
 		
 		objects.t_time_to_single_game.visible=false;
 		//устанавливаем банк на начало
@@ -725,25 +734,63 @@ test_game={
 		
 		host.add_msg('ИНФО','ПОКА МЫ ЖДЕМ ИГРОКОВ, СЫГРАЕМ В ОДИНОЧНУЮ ИГРУ...')
 		
-		this.timer=setTimeout(function(){test_game.start()},3000);
+		this.timer=setTimeout(function(){sp_game.start()},3000);
 		
 	},
 	
 	start(){
 		
 		
+		//заполняем цепочку банка
+		for (let n=0;n<objects.bank_points.length;n++)
+			objects.bank_points[n].t_money.text=this.BANK_DATA[n];
+		
 		//если это просмотр и банк скрыт то показываем его
 		if (!objects.bank_cont.visible)
 			anim2.add(objects.bank_cont,{x:[-100,0]}, true, 1,'easeOutBack');
 		game.set_bank_level(0);	
 		
+		this.new_question();
+		
+	},
+	
+	new_question(){
+		
 		const q_id=irnd(0,QUESTIONS.length-1);
 		this.cor_ans=QUESTIONS[q_id][0];
-		host.add_msg('ВОПРОС',QUESTIONS[q_id][1])
+		host.add_msg('ВОПРОС',QUESTIONS[q_id][1],this.bank_level>0);
+		
+		game.start_timer(20);
+		
 		
 		keyboard.kill();
 		keyboard.show();
-		keyboard.callback=this.ans.bind(test_game);
+		keyboard.callback=this.ans.bind(sp_game);	
+		
+	},
+	
+	reset_bank_ladder(){
+		
+		if (!this.on) return;
+		game.set_bank_level(0);		
+		this.bank_level=0;
+		
+	},
+	
+	put_bank(){
+		
+		const cur_bank=this.BANK_DATA[this.bank_level];
+		game.take_bank(cur_bank);
+		objects.pcards[0].t_rating.text=my_data.rating||0;
+		sound.play('money');
+		this.reset_bank_ladder();
+		
+	},
+	
+	process(){
+		
+		
+		
 		
 	},
 	
@@ -756,29 +803,22 @@ test_game={
 	
 	ans(t){	
 		
-		if (t!==this.cor_ans){
-			anim2.add(objects.keyboard,{x:[objects.keyboard.x, objects.keyboard.x+10]}, true, 0.15,'shake');			
-			sound.play('wrong_ans');
-			this.bank_level=0;
-			game.set_bank_level(0,0);
-		}else{
-			sound.play('correct_ans')
-			this.start();		
+		if (t==this.cor_ans){
+			sound.play('correct_ans')	
 			this.bank_level++;
-			if(this.bank_level>=BANK_DATA.length)
-				this.bank_level=0;
-			game.set_bank_level(this.bank_level,0);
+			if(this.bank_level>=this.BANK_DATA.length)
+				this.bank_level=0;			
+		}else{
+			sound.play('wrong_ans');	
+			anim2.add(objects.keyboard,{x:[objects.keyboard.x, objects.keyboard.x+10]}, true, 0.15,'shake');								
+			this.bank_level=0;
 		}
 		
-		if (t==='ПАС'){
-			const q_id=irnd(0,QUESTIONS.length-1);
-			this.cor_ans=QUESTIONS[q_id][0];
-			host.add_msg('ТЕСТ',QUESTIONS[q_id][1])
-			this.bank_level=0;
-			game.set_bank_level(0,0);
-		}
+		if (t==='ПАС'||t==this.cor_ans)
+			this.new_question();
+		
+		game.set_bank_level(this.bank_level,0);
 
-		console.log(t);		
 	}	
 	
 }
@@ -823,6 +863,7 @@ game={
 							
 		//процессинг таймера ходов
 		some_process.timer_bar=this.process.bind(this);			
+		
 			
 		fbs.ref(room_id+'/pending/'+my_data.uid).onDisconnect().remove();
 				
@@ -883,6 +924,8 @@ game={
 		//расставляем иконки
 		for(let i=0;i<objects.pcards.length;i++){
 			const card=objects.pcards[i];
+			card.cross.visible=false;
+			card.alpha=1;
 			card.x=110+i*82;
 		}
 
@@ -893,7 +936,7 @@ game={
 			keyboard.close();
 		
 		//останавливаем тестовую игру
-		test_game.stop();
+		sp_game.stop();
 
 		//скрываем данные от суперигры
 		objects.ans_icons_cont.visible=false;
@@ -917,7 +960,11 @@ game={
 		if (this.players.length===1)
 			host.add_msg('ИНФО','ПОКА НЕТ ДРУГИХ ИГРОКОВ, ПРОВЕРИМ ВАШИ ЗНАНИЯ, ВАС ЖДУТ 3 ВОПРОСА!')
 		else
-			host.add_msg('ИНФО','НАЧИНАЕМ ИГРУ!')			
+			host.add_msg('ИНФО','НАЧИНАЕМ ОНЛАЙН ИГРУ!')			
+		
+		//заполняем цепочку банка
+		for (let n=0;n<objects.bank_points.length;n++)
+			objects.bank_points[n].t_money.text=BANK_DATA[n];
 		
 		//подчищаем карточки игроков
 		this.clean_cards();
@@ -1056,12 +1103,10 @@ game={
 		ad.show();
 	},
 	
-	take_bank(won_bank){
-		
-		let total_bank=+objects.t_total_bank.text;
-		if (!total_bank) return;
-		if (won_bank) total_bank=won_bank;
-		my_data.rating+=total_bank
+	take_bank(won_bank){		
+	
+		if (!won_bank) return;
+		my_data.rating+=won_bank
 		fbs.ref('players/'+my_data.uid+'/rating').set(my_data.rating);
 		
 	},
@@ -1460,7 +1505,10 @@ game={
 			if (objects.timer_bar.scale_x<=0){
 				objects.timer_bar.scale_x=0;
 				objects.timer_bar.visible=false;
-				this.timeout=0;				
+				this.timeout=0;		
+				
+				//в одиночную игру тоже сообщаем
+				sp_game.reset_bank_ladder();
 			}			
 		}
 		
@@ -1469,12 +1517,12 @@ game={
 			objects.table_status_circle.rotation+=0.2;				
 			objects.table_status_pic.scale_y=Math.sin(game_tick)*0.666;
 			
-			if(!test_game.on&&objects.t_table_status0.text==='Ждем игроков...'){
+			if(!sp_game.on&&objects.t_table_status0.text==='Ждем игроков...'){
 				const wait_players_time=Date.now()-this.wait_players_start;
 				const time_to_single_game=15-(~~(wait_players_time*0.001));
 				objects.t_time_to_single_game.text='До начала одиночной игры осталось '+time_to_single_game+' секунд';
 				if (time_to_single_game<=0)
-					test_game.activate();
+					sp_game.activate();
 			}
 
 		}
@@ -1516,12 +1564,20 @@ game={
 		
 	bank_opt_res(do_bank){
 		
+		//завершаем
+		host.bank_resolver('ok');		
+
+		//это если одиночная игра
+		if(sp_game.on&&do_bank){
+			sp_game.put_bank();
+			return;			
+		}
+		
 		//если кликнули на банк
 		if (do_bank)
 			fbs.ref(room_id+'/players_actions').set({uid:my_data.uid,type:'put_bank',tm:Date.now()})
 		
-		//завершаем
-		host.bank_resolver('ok');		
+
 	},
 		
 	bank_opt_down(e){
@@ -1548,7 +1604,7 @@ game={
 		objects.keyboard_cont.visible=false;		
 		objects.timer_bar.visible=false;
 		
-		test_game.stop();
+		sp_game.stop();
 		
 		clearInterval(this.pending_timer);
 		fbs.ref(room_id+'/server_events').off();
