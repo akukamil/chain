@@ -850,6 +850,14 @@ game={
 		
 	async activate(){
 		
+		//расставляем иконки
+		for(let i=0;i<objects.pcards.length;i++){
+			const card=objects.pcards[i];
+			card.cross.visible=false;
+			card.alpha=1;
+			card.x=110+i*82;
+		}
+		
 		//текущее состояние стола
 		await game.analyse_table();		
 
