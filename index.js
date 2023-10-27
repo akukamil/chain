@@ -711,6 +711,10 @@ sp_game={
 		
 		//скрываем данные от суперигры
 		objects.ans_icons_cont.visible=false;
+				
+		//заполняем цепочку банка
+		for (let n=0;n<objects.bank_points.length;n++)
+			objects.bank_points[n].t_money.text=this.BANK_DATA[n];
 		
 		//если это просмотр и банк скрыт то показываем его
 		anim2.add(objects.bank_cont,{x:[-100,0]}, true, 1,'easeOutBack');
@@ -745,12 +749,9 @@ sp_game={
 		
 	},
 	
-	start(){
+	start(){	
 		
-		
-		//заполняем цепочку банка
-		for (let n=0;n<objects.bank_points.length;n++)
-			objects.bank_points[n].t_money.text=this.BANK_DATA[n];
+
 		
 		//если это просмотр и банк скрыт то показываем его
 		if (!objects.bank_cont.visible)
