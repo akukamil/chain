@@ -1082,7 +1082,7 @@ game={
 			anim2.add(card.cross,{scale_xy:[0,0.666]}, true, 0.8,'easeOutBack');
 			card.alpha=0.25;
 			
-			if (card.uid===my_data.uid) {
+			if (card.uid===my_data.uid&&this.iam_active) {
 				this.iam_active=0;
 				this.close();
 				tables_menu.activate();
