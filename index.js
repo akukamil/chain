@@ -1620,7 +1620,9 @@ game={
 		objects.control_buttons.visible=false;	
 		objects.host_msg.visible=false;
 		objects.ans_icons_cont.visible=false;
-		objects.bank_cont.visible=false;
+		//если это просмотр и банк скрыт то показываем его
+		if (objects.bank_cont.visible)
+			anim2.add(objects.bank_cont,{x:[0,-100]}, false, 1,'easeOutBack');
 		objects.avatars_cont.visible=false;
 		objects.keyboard_cont.visible=false;		
 		objects.timer_bar.visible=false;
