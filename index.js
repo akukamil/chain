@@ -2219,12 +2219,7 @@ tables_menu={
 			sound.play('locked');
 			return
 		};
-		
-		if(room==='room2'){
-			sound.play('locked');
-			return;
-		}
-		
+				
 		if(room==='room3'){
 			sound.play('locked');
 			return;
