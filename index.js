@@ -2110,8 +2110,8 @@ tables_menu={
 		//это чат
 		chat.activate();
 				
-		anim2.add(objects.table1_data_cont,{y:[-150,objects.table1_data_cont.sy]}, true, 0.25,'linear');
-		anim2.add(objects.table2_data_cont,{y:[-150,objects.table2_data_cont.sy],alpha:[0,0.5]}, true, 0.25,'linear');
+		anim2.add(objects.table1_data_cont,{y:[-150,objects.table1_data_cont.sy]}, true, 0.15,'linear');
+		anim2.add(objects.table2_data_cont,{y:[-150,objects.table2_data_cont.sy]}, true, 0.20,'linear');
 		anim2.add(objects.table3_data_cont,{y:[-150,objects.table3_data_cont.sy],alpha:[0,0.5]}, true, 0.25,'linear');
 
 		anim2.add(objects.hints_cont,{x:[800,objects.hints_cont.sx]}, true, 0.25,'linear');
