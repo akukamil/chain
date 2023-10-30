@@ -1168,6 +1168,7 @@ game={
 		if(card.uid===my_data.uid) return;
 		if(card.active===0) return;
 		if(!this.voting_on) return;
+		if(!this.iam_active) return;
 				
 		host.add_msg('ИНФО','ВЫБОР СДЕЛАН! ЖДЕМ ОСТАЛЬНЫХ ИГРОКОВ...',0,'vote_done');
 		
