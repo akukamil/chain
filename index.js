@@ -901,10 +901,13 @@ game={
 				game.new_round_event(data);
 			
 			if(data.type==='put_bank')
-				game.put_bank(data);	
-					
+				game.set_bank_level(0,data.bank_total);	
+								
 			if(data.type==='no_players')
-				game.no_players_event();	
+				game.no_game_event('ИНФО','ВСЕ ИГРОКИ ПОКИНУЛИ ИГРУ...');	
+			
+			if(data.type==='no_bank')
+				game.no_game_event('ИНФО','ИГРА ЗАВЕРШЕНА. ВЫ НИЧЕГО НЕ ПОЛОЖИЛИ В БАНК(((');	
 					
 			if(data.type==='q')
 				game.game_question_event(data);	
@@ -926,6 +929,9 @@ game={
 			
 			if(data.type==='ans')
 				game.game_ans(data);	
+			
+			if(data.type==='no_bank')
+				game.game_ans(data);
 			
 			if(data.type==='super_game')
 				game.super_game_start_event(data);		
@@ -1101,22 +1107,22 @@ game={
 			return;
 		}
 				
-		
+		//данные о банке которые содержатся в ответе
 		this.set_bank_level(data.b_level,data.b_total);
 		console.log(data);	
 	},
 	
-	no_players_event(){
+	no_game_event(t1,t2){
 		
 		//закрываем если открыта
 		if (objects.keyboard_cont.visible)
 			keyboard.close();
 		
-		host.add_msg('ИНФО','ВСЕ ИГРОКИ ПОКИНУЛИ ИГРУ...')
+		host.add_msg(t1,t2)
 		
 		this.show_status_window('Ждем игроков...');
 	},
-	
+		
 	round_finish_event(data){	
 		if (data.single)
 			host.add_msg('ИНФО','НЕПЛОХО! ИГРАЙТЕ С ДРУГИМИ ИГРОКАМИ С ГОЛОСОВАНИЕМ И СУПЕР ИГРОЙ');	
@@ -1153,10 +1159,11 @@ game={
 			
 	start_voting(data){
 		
+		console.log('стат.игроков ',data);
 		this.voting_on=1;
 
 		host.add_msg('ИНФО','НАЧИНАЕМ ГОЛОСОВАНИЕ! НАЖМИТЕ НА АВАТАР ИГРОКА КОТОРОГО ВЫ СЧИТАЕТЕ САМЫМ СЛАБЫМ',0,'voting');
-		this.start_timer(20);
+		this.start_timer(18);
 		
 		//чистим карточки
 		this.clean_cards();
@@ -1217,8 +1224,22 @@ game={
 			
 	set_bank_level(bank_level,bank_total){
 		
+		//текущий банк
+		const cur_bank=+objects.t_total_bank.text;
+				
 		if (bank_total)
 			objects.t_total_bank.text=bank_total;
+		
+		if (bank_level===0){
+			
+			if(bank_total>cur_bank){
+				//кто-то положил деньги в банк
+				sound.play('money');
+			}else{
+				//банк сгорел
+				
+			}			
+		}		
 		
 		objects.bank_points.forEach(p=>p.bcg.texture=gres.bank_point_bcg.texture)		
 		objects.bank_points[bank_level].bcg.texture=gres.cur_bank_point_bcg.texture;
@@ -1307,7 +1328,7 @@ game={
 					host.add_msg('ИНФО','ПОЗДРАВЛЯЮ С ПОБЕДОЙ! ВАШ ВЫИГРЫШ: '+total_bank,0,'applause');
 				}else{
 					const winner_name=this.uid_to_pcards[data.winner].name.text;
-					host.add_msg('ИНФО','ИГРА ЗАВЕРШЕНА! ПОБЕДИЛ '+winner_name);
+					host.add_msg('ИНФО','ИГРА ЗАВЕРШЕНА! ПОБЕДИЛ(А) '+winner_name);
 				}					
 			}	
 			
@@ -1325,6 +1346,7 @@ game={
 		objects.timer_bar.visible=false;
 		
 		const card=this.uid_to_pcards[data.uid];
+		if(!card) return;
 		
 		objects.t_player_ans.text=data.ans;
 		if (data.cor){
@@ -1578,13 +1600,7 @@ game={
 			objects.sound_switch_button.texture=gres.no_sound_icon.texture;
 		
 	},
-	
-	put_bank(data){
-		objects.t_total_bank.text=data.bank_total;
-		sound.play('money');
-		this.set_bank_level(0);
-	},
-		
+			
 	bank_opt_res(do_bank){
 		
 		//завершаем
