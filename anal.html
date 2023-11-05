@@ -165,15 +165,15 @@ async function update_room_quick_stat() {
 	console.timeEnd();
 	
 
-	firebase.database().ref('states').once('value').then((snapshot) => {
+	firebase.database().ref('room1/pending').once('value').then((snapshot) => {
 		document.getElementById("but_ref1").textContent = Object.keys(snapshot.val()).length;
 	})
 	
-	firebase.database().ref('states2').once('value').then((snapshot) => {
+	firebase.database().ref('room2/pending').once('value').then((snapshot) => {
 		document.getElementById("but_ref2").textContent = Object.keys(snapshot.val()).length;
 	})
 	
-	firebase.database().ref('states3').once('value').then((snapshot) => {
+	firebase.database().ref('room3/pending').once('value').then((snapshot) => {
 		document.getElementById("but_ref3").textContent = Object.keys(snapshot.val()).length;
 	})
 
