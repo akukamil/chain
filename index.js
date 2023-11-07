@@ -77,7 +77,7 @@ class chat_record_class extends PIXI.Container {
 		this.msg = new PIXI.BitmapText('Имя Фамил', {fontName: 'mfont',fontSize: 27,align: 'left'}); 
 		this.msg.x=0;
 		this.msg.y=0;
-		this.msg.maxWidth=600;
+		this.msg.maxWidth=700;
 		this.msg.tint = 0xffffff;
 				
 		this.visible = false;
@@ -174,30 +174,39 @@ class player_card_class extends PIXI.Container {
 		this.name.x=40;
 		this.name.y=80;
 		this.name.tint=0xffffff;
-						
+								
 		this.t_rating=new PIXI.BitmapText('9564', {fontName: 'mfont', fontSize :24});
 		this.t_rating.x=40;
 		this.t_rating.y=100;
-		this.t_rating.tint=0xffffff;
+		this.t_rating.tint=0xffff00;
 		this.t_rating.anchor.set(0.5,0.5);
+		
+		this.game_result=new PIXI.BitmapText('-', {fontName: 'mfont', fontSize :22});
+		this.game_result.x=40;
+		this.game_result.y=120;
+		this.game_result.tint=0xaaaaff;
+		this.game_result.anchor.set(0.5,0.5);
+		this.game_result.visible=false;
+		
+		this.mine_hl=new PIXI.Sprite(gres.mine_hl.texture);
+		this.mine_hl.width=20;
+		this.mine_hl.height=20;
+		this.mine_hl.x=50;
+		this.mine_hl.y=50;
 		
 		this.active=0;
 		this.place=-1;
 		
 		this.visible=false;
 		
-		this.addChild(this.avatar_hl,this.avatar_hl_vote,this.avatar_mask,this.avatar,this.avatar_frame,this.cross,this.vote_bcg,this.t_vote_res,this.name,this.t_rating);
+		this.addChild(this.avatar_hl,this.avatar_hl_vote,this.avatar_mask,this.avatar,this.avatar_frame,this.cross,this.vote_bcg,this.t_vote_res,this.name,this.t_rating,this.game_result,this.mine_hl);
 		
 	}	
 	
 	set_as_mine(mine){		
-		if(mine){
-			this.name.tint=0xffff00;
-			this.t_rating.tint=0xffff00;
-		}else{
-			this.name.tint=0xffffff;
-			this.t_rating.tint=0xffffff;
-		}				
+
+		this.mine_hl.visible=mine;
+		
 	}
 		
 	async show_income(income){	
@@ -1147,6 +1156,7 @@ game={
 			card.avatar_hl_vote.visible=false;
 			card.t_vote_res.visible=false;
 			card.vote_bcg.visible=false;
+			card.game_result.visible=false;
 			if (card.active){
 				card.cross.visible=false;
 				card.alpha=1;				
@@ -1161,12 +1171,24 @@ game={
 		
 		console.log('стат.игроков ',data);
 		this.voting_on=1;
-
+		
 		host.add_msg('ИНФО','НАЧИНАЕМ ГОЛОСОВАНИЕ! НАЖМИТЕ НА АВАТАР ИГРОКА КОТОРОГО ВЫ СЧИТАЕТЕ САМЫМ СЛАБЫМ',0,'voting');
 		this.start_timer(18);
 		
 		//чистим карточки
 		this.clean_cards();
+		
+		//показываем результаты раунда
+		for (const player of data.players_stat){
+			const uid=player.uid;
+			const cor=player.cor;			
+			const wrong=player.wrong;
+			const tot=cor+wrong;
+			const banked=player.banked;
+			const card=this.uid_to_pcards[uid];
+			card.game_result.visible=true;
+			card.game_result.text=cor+'/'+tot+'  +'+banked;		
+		}		
 		
 	},
 	
@@ -1216,9 +1238,7 @@ game={
 			host.add_msg('ИНФО',weakest_card.name.text+' САМОЕ СЛАБОЕ ЗВЕНО!');			
 		}
 		
-		//показываем сообщение
-		
-		
+		//показываем сообщение		
 		
 	},
 			
